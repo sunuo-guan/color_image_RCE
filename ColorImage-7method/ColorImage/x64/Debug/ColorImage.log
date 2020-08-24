@@ -1,0 +1,19 @@
+﻿  StdAfx.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\stdafx.cpp(5): fatal error C1083: 无法打开预编译头文件: “x64\Debug\ColorImage.pch”: No such file or directory
+  SHPN.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\shpn.cpp(4): fatal error C1083: 无法打开预编译头文件: “x64\Debug\ColorImage.pch”: No such file or directory
+  MainFrm.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\mainfrm.cpp(4): fatal error C1083: 无法打开预编译头文件: “x64\Debug\ColorImage.pch”: No such file or directory
+  jbigt.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\jbigt.cpp(1106): fatal error C1010: 在查找预编译头时遇到意外的文件结尾。是否忘记了向源中添加“#include "stdafx.h"”?
+  jbiga.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\jbiga.cpp(430): fatal error C1010: 在查找预编译头时遇到意外的文件结尾。是否忘记了向源中添加“#include "stdafx.h"”?
+  deprejbgView.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\deprejbgview.cpp(4): fatal error C1083: 无法打开预编译头文件: “x64\Debug\ColorImage.pch”: No such file or directory
+  deprejbgDoc.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\deprejbgdoc.cpp(9): fatal error C1083: 无法打开预编译头文件: “x64\Debug\ColorImage.pch”: No such file or directory
+  deprejbg.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\deprejbg.cpp(4): fatal error C1083: 无法打开预编译头文件: “x64\Debug\ColorImage.pch”: No such file or directory
+  ChildFrm.cpp
+c:\users\may_2\desktop\project\code\colorimage-max\colorimage\childfrm.cpp(4): fatal error C1083: 无法打开预编译头文件: “x64\Debug\ColorImage.pch”: No such file or directory
+  正在生成代码...
