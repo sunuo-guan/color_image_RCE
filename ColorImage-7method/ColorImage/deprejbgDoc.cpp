@@ -7088,4930 +7088,10 @@ void CDeprejbgDoc::depreRGB()
 	
 }
 
-void CDeprejbgDoc::Genhanced()
-{
-	//增强S值
-	int pairs = 30;
-
-	//先不用嵌入彩色locationmap
-	addDataEmbedJudge = false;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	/*记录位置图新增定义*/
-	struct jbg85_enc_state s;
-	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
-	long locationMapSize;              //locationmap大小
-	unsigned char location8;           //一个字节，记录8个位置
-
-	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
-	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
-
-	/*初始化*/
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	//位置图初始化
-	if (hGchannelMap)
-	{
-		GlobalFree(hGchannelMap);
-		hGchannelMap = NULL;
-	}
-	hGchannelMap = GlobalAlloc(GMEM_FIXED, locationMapSize);
-	GchannelMap = (unsigned char*)hGchannelMap;
-	for (int i = 0; i < locationMapSize; i++)
-		*(GchannelMap + i) = 0;
-
-	/*RGB通道分别赋值*/
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
-		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lporigimage + j);
-		z++;
-	}
-
-	//增强G通道
-	lporigimage = Gchannel;
-	//memcpy(lporigimage+GrayHead, Gchannel+GrayHead, m_ImageSize);
-	deori(pairs);
-
-	if (hGchannelEnhanced)
-	{
-		GlobalFree(hGchannelEnhanced);
-		hGchannelEnhanced = NULL;
-	}
-	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
-	memcpy(GchannelEnhanced, lpwmimage, m_ImageSize);
-
-	if (hRchannelEnhanced)
-	{
-		GlobalFree(hRchannelEnhanced);
-		hRchannelEnhanced = NULL;
-	}
-	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
-
-	if (hBchannelEnhanced)
-	{
-		GlobalFree(hBchannelEnhanced);
-		hBchannelEnhanced = NULL;
-	}
-	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
-
-	Rless = 0, Rmore = 0, Bless = 0, Bmore = 0;
-	Rlow = 0, Rhigh = 255, Blow = 0, Bhigh = 255;
-
-	/*G通道增强后，R、B通道的值跟着改变*/
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < locationMapWidth; column++)
-		{
-			int traverse = GrayHead + row * ImageWidth + column;                  //遍历全图的像素值
-			int a;
-			int p;
-			int tmp;
-			a = *(traverse + GchannelEnhanced) + *(traverse + Rchannel) - *(traverse + Gchannel);              //a=G'+(R-G)
-			p = *(traverse + GchannelEnhanced) + *(traverse + Bchannel) - *(traverse + Gchannel);              //p=G'+(B-G)
-
-			if (column % 8 == 0)      location8 = 0;          //以8为长度，起始时先置0
-
-			if (column < ImageWidth)                          //不超出原图宽度时，进行处理
-			{
-				
-				//若有一个通道溢出，则两个都不变
-				if (a >= 0 && a <= 255 && p >= 0 && p <= 255)
-				{
-					*(RchannelEnhanced + traverse) = a;
-					*(BchannelEnhanced + traverse) = p;
-					location8 = (location8 << 1) + 0;
-				}
-				else
-				{
-					*(RchannelEnhanced + traverse) = *(Rchannel + traverse);
-					*(BchannelEnhanced + traverse) = *(Bchannel + traverse);
-					location8 = (location8 << 1) + 1;
-				}
-
-				/*
-				//哪个通道溢出，哪个通道不变,则必须由两个locationMap记录
-				if (a < 0)
-				{
-					//*(RchannelEnhanced + traverse) = 0;
-					//if (a < Rlow) { Rlow = a; }                 //统计最小的溢出值
-					//Rless++;
-					*(RchannelEnhanced + traverse) = *(Rchannel + traverse);
-					tmp = 1;
-				}
-				else if (a > 255)
-				{
-					//*(RchannelEnhanced + traverse) = 255;
-					//if (a >Rhigh) { Rhigh = a; }               //统计最大的溢出值
-					//Rmore++;
-					*(RchannelEnhanced + traverse) = *(Rchannel + traverse);
-					tmp = 1;
-				}
-				else
-				{
-					*(RchannelEnhanced + traverse) = a;
-					tmp = 0;
-				}
-
-				if (p < 0)
-				{
-					//*(BchannelEnhanced + traverse) = 0;
-					//if (p < Blow) { Blow = p; }               //统计最小的溢出值
-					//Bless++;
-					*(BchannelEnhanced + traverse) = *(Bchannel + traverse);
-					tmp = 1;
-				}
-				else if (p > 255)
-				{
-					//*(BchannelEnhanced + traverse) = 255;
-					//if (p > Bhigh) { Bhigh = p; }             //统计最大的溢出值
-					//Bmore++;
-					*(BchannelEnhanced + traverse) = *(Bchannel + traverse);
-					tmp = 1;
-				}
-				else
-				{
-					*(BchannelEnhanced + traverse) = p;
-					tmp = 0;
-				}
-				*/
-			}
-			else
-				location8 = (location8 << 1) + 0;																		//当超出原图宽度时都使用0填充
-
-			if (column % 8 == 7)        *(GchannelMap + (row*locationMapWidth + column) / 8) = location8;            //到第8位时将location8赋值到map中
-
-
-			//GBestS = min;
-			//BBestS = max;
-		}
-
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o + 2) = *(RchannelEnhanced + z);
-		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
-		*(lpwmimage + o) = *(BchannelEnhanced + z);
-		z++;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-	/*locationMap压缩*/
-	if (hlocationCompression)
-	{
-		GlobalFree(hlocationCompression);
-	}
-	hlocationCompression = GlobalAlloc(GMEM_FIXED, locationMapSize);
-	locationCompression = (unsigned char *)hlocationCompression;
-	for (int i = 0; i < locationMapSize; i++)
-		*(locationCompression + i) = 0;
-
-	memcpy(locationCompression, GchannelMap, locationMapSize);
-
-	testbuf_len = 0;
-
-	testbuf = (unsigned char *)checkedmalloc(TESTBUF_SIZE);                        //压缩后输出
-
-	jbg85_enc_init(&s, locationMapWidth, ImageHeight, testbuf_writel, NULL);                //初始化
-	jbg85_enc_options(&s, JBG_TPBON, 0, -1);                                       //参数传递
-
-	for (int row=0;row<ImageHeight;row++)
-		jbg85_enc_lineout(&s, locationCompression + row * locationMapWidth / 8, locationCompression + (row - 1)*locationMapWidth / 8, locationCompression + (row - 2)*locationMapWidth / 8);    //参数：一行，前一行，前前一行
-
-	buflen = testbuf_len;
-
-	memcpy(locationCompression, testbuf, buflen);
-
-	ColorLocationMap(locationCompression, buflen, -1);
-
-	addDataLen = buflen + sizeof(long);
-
-	ColorToThreeTimesGray();
-}
-
-void CDeprejbgDoc::GenhancedRecovery()
-{
-	bool haveChannel = false;
-	ColorToThreeTimesGrayRecovery(haveChannel);
-
-	/*记录位置图新增定义*/
-	struct jbg85_dec_state d;
-	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
-	long locationMapSize;              //locationmap大小
-	unsigned char location8;           //一个字节，记录8个位置
-	unsigned char *image, *buffer;
-	size_t plane_size, buffer_len;
-	size_t cnt;
-
-	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
-	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
-
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	/*初始化*/
-	if (hGchannelEnhanced)
-	{
-		GlobalFree(hGchannelEnhanced);
-		hGchannelEnhanced = NULL;
-	}
-	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
-
-	if (hRchannelEnhanced)
-	{
-		GlobalFree(hRchannelEnhanced);
-		hRchannelEnhanced = NULL;
-	}
-	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
-
-	if (hBchannelEnhanced)
-	{
-		GlobalFree(hBchannelEnhanced);
-		hBchannelEnhanced = NULL;
-	}
-	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
-
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	/*RGB通道分别赋值*/
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(RchannelEnhanced + GrayHead + z) = *(lpwmimage + j + 2);
-		*(GchannelEnhanced + GrayHead + z) = *(lpwmimage + j + 1);
-		*(BchannelEnhanced + GrayHead + z) = *(lpwmimage + j);
-		z++;
-	}
-
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	if (hpreimage)
-	{
-		GlobalFree(hpreimage);
-		hpreimage = NULL;
-	}
-	hpreimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);		
-	lppreimage = (unsigned char *)hpreimage;
-
-	/*恢复G通道数据，存至Gchannel中*/
-	memcpy(lppreimage, GchannelEnhanced, m_ImageSize);   
-	depre();
-	memcpy(Gchannel, lpwmimage, m_ImageSize);
-
-	/*解压*/
-
-	plane_size = ImageHeight * locationMapWidth;
-	int result;
-
-	//buffer_len = ((lmwidth >> 3) + !!(lmwidth & 7)) * 3;            //缓冲区长度
-	buffer_len = plane_size;
-	buffer = (unsigned char *)checkedmalloc(buffer_len);           //缓冲区分配内存
-	image = (unsigned char *)checkedmalloc(plane_size);            //输出图像分配内存
-	jbg85_dec_init(&d, buffer, buffer_len, line_out, image);
-	//result = jbg85_dec_in(&d, locationCompression, buflen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
-	result = jbg85_dec_in(&d, colorLocationMap, ExtractMapLen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
-
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			int i = column / 8;                                                 //求location map的宽
-			int j = 7 + i * 8 - column;                                             //计算右移对应的位数，
-			unsigned char tmp = *(image + row * locationMapWidth / 8 + i);                               //读取对应的预处理location map数据，一个
-			int m = (tmp >> j) & 1;                                               //m为读取到的location map的位数据，为0或1
-
-			int traverse = GrayHead + row * ImageWidth + column;                  //遍历全图的像素值
-			int a;
-			int p;
-			a = *(traverse + Gchannel) + *(traverse + RchannelEnhanced) - *(traverse + GchannelEnhanced);              //a=G'+(R-G)
-			p = *(traverse + Gchannel) + *(traverse + BchannelEnhanced) - *(traverse + GchannelEnhanced);              //p=G'+(B-G)
-
-			if (m == 1)
-			{
-				*(Rchannel + traverse) = *(RchannelEnhanced + traverse);
-				*(Bchannel + traverse) = *(BchannelEnhanced + traverse);
-			}
-			else if (m == 0)
-			{
-				*(Rchannel + traverse) = a;
-				*(Bchannel + traverse) = p;
-			}
-		}
-
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o + 2) = *(Rchannel + z);
-		*(lpwmimage + o + 1) = *(Gchannel + z);
-		*(lpwmimage + o) = *(Bchannel + z);
-		z++;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-}
- 
-void CDeprejbgDoc::ColorLocationMap(unsigned char *ColorMap, long MapLength, int channel)
-{
-	unsigned char intermediary;
-	unsigned char* lenmediary;
-	unsigned char* channelmediary;
-	int shiftnumber, shiftvalue;
-	long *lengthEmbed;
-	int *channelEmbed;
-	int parameterLen;
-	addDataEmbedJudge = true;
-	
-	if (channel > 2 || channel < 0)
-	{
-		if (haddDataEmbed)
-		{
-			GlobalFree(haddDataEmbed);
-			haddDataEmbed = NULL;
-		}
-		haddDataEmbed = GlobalAlloc(GMEM_FIXED, (MapLength + sizeof(long)) * 8);
-		addDataEmbed = (unsigned char *)haddDataEmbed;
-
-		/*Maplength赋值到addDataEmbed中*/
-		lengthEmbed = &MapLength;
-		for (int i = 0; i < sizeof(long); i++)
-		{
-			lenmediary = (unsigned char *)lengthEmbed + i;
-			intermediary = *lenmediary;
-			for (int k = 0; k < 8; k++)
-			{
-				*(addDataEmbed + 8 * i + k) = 0;
-				shiftnumber = k;
-				shiftvalue = (intermediary >> shiftnumber) & 1;
-				*(addDataEmbed + 8 * i + k) = shiftvalue;
-			}
-		}
-		parameterLen = sizeof(long);
-	}
-	else if (channel == 0 || channel == 1 || channel == 2)
-	{
-		if (haddDataEmbed)
-		{
-			GlobalFree(haddDataEmbed);
-			haddDataEmbed = NULL;
-		}
-		haddDataEmbed = GlobalAlloc(GMEM_FIXED, (MapLength + sizeof(long) + sizeof(int)) * 8);
-		addDataEmbed = (unsigned char *)haddDataEmbed;
-
-		//先嵌入map长度再嵌入增强的channel是哪个
-		/*Maplength赋值到addDataEmbed中*/
-		lengthEmbed = &MapLength;
-		for (int i = 0; i < sizeof(long); i++)
-		{
-			lenmediary = (unsigned char *)lengthEmbed + i;
-			intermediary = *lenmediary;
-			for (int k = 0; k < 8; k++)
-			{
-				*(addDataEmbed + 8 * i + k) = 0;
-				shiftnumber = k;
-				shiftvalue = (intermediary >> shiftnumber) & 1;
-				*(addDataEmbed + 8 * i + k) = shiftvalue;
-			}
-		}
-
-		/*channel赋值到addDataEmbed中*/
-		channelEmbed = &channel;
-		for (int i = 0; i < sizeof(int); i++)
-		{
-			channelmediary = (unsigned char *)channelEmbed + i;
-			intermediary = *channelmediary;
-			for (int k = 0; k < 8; k++)
-			{
-				*(addDataEmbed + 8 * (sizeof(long) + i) + k) = 0;
-				shiftnumber = k;
-				shiftvalue = (intermediary >> shiftnumber) & 1;
-				*(addDataEmbed + 8 * (sizeof(long) + i) + k) = shiftvalue;
-			}
-		}
-
-		parameterLen = sizeof(long) + sizeof(int);
-	}
-	else
-	{
-		failed = true;
-	}
-
-
-	/*ColorMap赋值到addDataEmbed中*/
-	for (int i = 0; i < MapLength; i++)
-	{
-		intermediary = *(ColorMap + i);
-		for (int k = 0; k < 8; k++)
-		{
-			*(addDataEmbed + 8 * (i + parameterLen) + k) = 0;
-			shiftnumber = k;
-			shiftvalue = (intermediary >> shiftnumber) & 1;
-			*(addDataEmbed + 8 * (i + parameterLen) + k) = shiftvalue;
-		}
-	}
-	
-	/*
-	for (int i = 0; i < (MapLength + parameterLen)*8; i++)
-	{
-		FILE *payloadtxt;
-		payloadtxt = fopen("E:\\experiment\\task\\ColorImage-7method\\addDataEmbed.txt", "a");
-		if (payloadtxt != NULL)
-			fprintf(payloadtxt, "%d \t", *(addDataEmbed+i));
-		fclose(payloadtxt);
-	}
-	*/
-
-}
-
-void CDeprejbgDoc::ColorMapRecovery(bool haveChannel)
-{
-	int last;
-	long *maplen;
-	HANDLE hmaplen = NULL;
-	int *channelChosen;
-	HANDLE hchannelChosen = NULL;
-	long start = 0;	
-	unsigned char shiftvalue;
-	unsigned char *intermediate;
-	int parameterLen;
-
-	/*找出最后一轮提取额外数据的轮数last*/
-	for (int i = 63; i >= 0; i--)
-	{
-		if (dataLen[i] == 0)
-			last = i - 1;
-	}
-
-	if (hmaplen)
-	{
-		GlobalFree(hmaplen);
-		hmaplen = NULL;
-	}
-	hmaplen = GlobalAlloc(GMEM_FIXED, sizeof(long));
-	maplen = (long *)hmaplen;
-
-	/*先读取extractdata最后一轮提取出的数据，此块数据中含有map长度*/
-	intermediate = (unsigned char *)maplen;
-	for (int i = 0; i < sizeof(long); i++)
-	{
-		*(intermediate + i) = 0;
-		for (int k = 0; k < 8; k++)
-		{
-			shiftvalue = *(ExtractData + haveStored - dataLen[last] + 8 * i + 7 - k);
-			*(intermediate + i) = (*(intermediate + i) << 1) + shiftvalue;
-		}
-	}
-	ExtractMapLen = *maplen;
-
-	if (haveChannel == true)
-	{
-		/*读取出增强了哪个channel*/
-		parameterLen = sizeof(long) + sizeof(int);
-
-		if (hchannelChosen)
-		{
-			GlobalFree(hchannelChosen);
-			hchannelChosen = NULL;
-		}
-		hchannelChosen = GlobalAlloc(GMEM_FIXED, sizeof(int));
-		channelChosen = (int *)hchannelChosen;
-
-		intermediate = (unsigned char *)channelChosen;
-		for (int i = 0; i < sizeof(int); i++)
-		{
-			*(intermediate + i) = 0;
-			for (int k = 0; k < 8; k++)
-			{
-				shiftvalue = *(ExtractData + haveStored - dataLen[last] + 8 * (sizeof(long) + i) + 7 - k);
-				*(intermediate + i) = (*(intermediate + i) << 1) + shiftvalue;
-			}
-		}
-		channelChosenExtract = *channelChosen;
-	}
-	else
-	{
-		parameterLen = sizeof(long);
-	}
-
-	if (hExtractDataOrder)
-	{
-		GlobalFree(hExtractDataOrder);
-		hExtractDataOrder = NULL;
-	}
-	hExtractDataOrder = GlobalAlloc(GMEM_FIXED, m_ImageSize * 24);
-	ExtractDataOrder = (unsigned char*)hExtractDataOrder;
-
-	/*将ExtractData的顺序调整好*/
-	for (int i = last; i >= 0; i--)
-	{
-		haveStored = haveStored - dataLen[i];
-		memcpy(ExtractDataOrder + start, ExtractData + haveStored, dataLen[i]);
-		start = dataLen[i] + start;
-	}
-	
-	for (int i = 0; i < addDataLen *8; i++)
-	{
-		/*
-		FILE *payloadtxt;
-		payloadtxt = fopen("E:\\experiment\\task\\ColorImage-7method\\ExtractDataOrder.txt", "a");
-		if (payloadtxt != NULL)
-			fprintf(payloadtxt, "%d \t", *(ExtractDataOrder + i));
-		fclose(payloadtxt);
-		*/
-
-		if (*(ExtractDataOrder + i) != *(addDataEmbed + i))
-		{
-			FILE *payloadtxt;
-			payloadtxt = fopen("E:\\experiment\\task\\ColorImage-7method\\different.txt", "a");
-			if (payloadtxt != NULL)
-				fprintf(payloadtxt, "%d \t", i);
-			fclose(payloadtxt);
-		}
-	}
-	
-	/*从调整好顺序的ExtractDataOrder取出map*/
-	if (hExtractMap)
-	{
-		GlobalFree(hExtractMap);
-		hExtractMap = NULL;
-	}
-	hExtractMap = GlobalAlloc(GMEM_FIXED, ExtractMapLen * 8);
-	ExtractMap = (unsigned char*)hExtractMap;
-	memcpy(ExtractMap, ExtractDataOrder + parameterLen * 8, ExtractMapLen * 8);
-
-	/*移位调整，得到压缩后的locationmap*/
-	if (hcolorLocationMap)
-	{
-		GlobalFree(hcolorLocationMap);
-		hcolorLocationMap = NULL;
-	}
-	hcolorLocationMap = GlobalAlloc(GMEM_FIXED, ExtractMapLen);
-	colorLocationMap = (unsigned char*)hcolorLocationMap;
-
-	for (int i = 0; i < ExtractMapLen; i++)
-	{
-		*(colorLocationMap + i) = 0;
-		for (int k = 0; k < 8; k++)
-		{
-			shiftvalue = *(ExtractMap + 7 - k + 8 * i);
-			*(colorLocationMap + i) = (*(colorLocationMap + i) << 1) + shiftvalue;
-		}
-	}
-
-	addDataEmbedJudge = false;
-
-}
-
-//彩色转变灰度
-void CDeprejbgDoc::ColorToThreeTimesGray()
-{
-	//增强对数
-	int pairs = 1;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将用其他增强后的彩色图像作为输入
-	lporigimage = lpwmimage;
-
-	//转灰度图
-	unsigned long m_ImageSize_ori = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-	int ColorImageWidth = ImageWidth;
-	ImageWidth = 3 * ImageWidth;   //RGB分别单独视作灰度图的一个像素值，图宽变为原来3倍
-	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-	
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hImage2D)
-	{
-		GlobalFree(hImage2D);
-		hImage2D = NULL;
-	}
-	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2D = (unsigned char*)hImage2D;
-
-	//将RGB存入灰度
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Image2D + GrayHead + z) = *(lporigimage + j);
-		*(Image2D + GrayHead + z + 1) = *(lporigimage + j + 1);
-		*(Image2D + GrayHead + z + 2) = *(lporigimage + j + 2);
-		z = z + 3;
-	}
-
-	//初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//增强转化后的灰度图
-	lporigimage = Image2D;
-	deori(pairs);
-
-	if (hImage2DEnhanced)
-	{
-		GlobalFree(hImage2DEnhanced);
-		hImage2DEnhanced = NULL;
-	}
-	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
-	memcpy(Image2DEnhanced, lpwmimage, m_ImageSize);
-
-	//初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(Image2DEnhanced + z);
-		*(lpwmimage + o + 1) = *(Image2DEnhanced + z + 1);
-		*(lpwmimage + o + 2) = *(Image2DEnhanced + z + 2);
-		z = z + 3;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-	//回写
-	m_ImageSize = m_ImageSize_ori;
-	ImageWidth = ColorImageWidth;
-}
-
-void CDeprejbgDoc::ColorToThreeTimesGrayRecovery(bool haveChannel)
-{
-	/*提取额外数据存储的初始化*/
-	if (hExtractData)
-	{
-		GlobalFree(hExtractData);
-		hExtractData = NULL;
-	}
-	hExtractData = GlobalAlloc(GMEM_FIXED, m_ImageSize * 24);
-	ExtractData = (unsigned char*)hExtractData;
-
-	/*额外数据长度的记录数组*/
-	for (int i = 0; i < 64; i++)
-	{
-		dataLen[i] = 0;
-	}
-	
-	//初始化赋零
-	haveStored = 0;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//转灰度图
-	unsigned long int m_ImageSize_ori = m_ImageSize;
-	int ColorImageWidth = ImageWidth;
-	ImageWidth = 3 * ImageWidth;
-	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//彩色图像转为灰度图像
-	//初始化
-	if (hImage2DEnhanced)
-	{
-		GlobalFree(hImage2DEnhanced);
-		hImage2DEnhanced = NULL;
-	}
-	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
-
-	//将RGB和I存入灰度
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		// *(Image2D + GrayHead + z) = *(lporigimage + j) * 0.3 + *(lporigimage + j + 1) * 0.59 + *(lporigimage + j + 2) * 0.11;
-		*(Image2DEnhanced + GrayHead + z) = *(lpwmimage + j);
-		*(Image2DEnhanced + GrayHead + z + 1) = *(lpwmimage + j + 1);
-		*(Image2DEnhanced + GrayHead + z + 2) = *(lpwmimage + j + 2);
-		z = z + 3;
-	}
-
-	//增强结果存出后初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	if (hpreimage)
-	{
-		GlobalFree(hpreimage);
-		hpreimage = NULL;
-	}
-	hpreimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);	
-	lppreimage = (unsigned char *)hpreimage;
-
-	//恢复
-	memcpy(lppreimage, Image2DEnhanced, m_ImageSize);
-	depre();
-
-	//初始化
-	if (hImage2D)
-	{
-		GlobalFree(hImage2D);
-		hImage2D = NULL;
-	}
-	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2D = (unsigned char*)hImage2D;
-
-	//恢复结果存入
-	memcpy(Image2D, lpwmimage, m_ImageSize);
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(Image2D + z);
-		*(lpwmimage + o + 1) = *(Image2D + z + 1);
-		*(lpwmimage + o + 2) = *(Image2D + z + 2);
-		z = z + 3;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-	//回写
-	m_ImageSize = m_ImageSize_ori;
-	ImageWidth = ColorImageWidth;
-
-	//调用，提取压缩后数据
-	ColorMapRecovery(haveChannel);
-}
-
-//增强max最多的？或者直接是G通道？
-void CDeprejbgDoc::enhancedMax() 
-{
-	//增强对数
-	int pairs = 50;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	/*记录位置图新增定义*/
-	struct jbg85_enc_state s;
-	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
-	long locationMapSize;              //locationmap大小
-	unsigned char location8;           //一个字节，记录8个位置
-
-	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
-	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
-
-	//初始化
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	if (hlocationMapColor)
-	{
-		GlobalFree(hlocationMapColor);
-		hlocationMapColor = NULL;
-	}
-	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	locationMapColor = (unsigned char*)hlocationMapColor;
-
-	if (hoverflowMap)
-	{
-		GlobalFree(hoverflowMap);
-		hoverflowMap = NULL;
-	}
-	hoverflowMap = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	overflowMap = (unsigned char*)hoverflowMap;
-
-	//各通道赋值
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
-		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lporigimage + j);
-		z++;
-	}
-
-	//调用，计算c1和c2
-	deoriRGBPre(lporigimage);
-
-	//找到Max值最多的通道
-	int Rnum = 0, Gnum = 0, Bnum = 0;
-	for (int i = 0; i < m_ImageSize-GrayHead; i++)
-	{
-		if (*(lpMreimage + i) == 2)
-			Rnum++;
-		else if (*(lpMreimage + i) == 1)
-			Gnum++;
-		else if (*(lpMreimage + i) == 0)
-			Bnum++;
-	}
-
-	//保存增强后的初始化
-	if (hchannelEnhanced)
-	{
-		GlobalFree(hchannelEnhanced);
-		hchannelEnhanced = NULL;
-	}
-	hchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	channelEnhanced = (unsigned char*)hchannelEnhanced;
-
-	//int channel;  //标记增强的是哪个通道,取值与RGBPre保持一致
-	//哪个最多增强哪个通道
-	if (Gnum >= Rnum & Gnum >= Bnum)
-	{
-		lporigimage = Gchannel;
-		deori(pairs);
-		channel = 1;
-		memcpy(channelEnhanced, lpwmimage, m_ImageSize);
-	}
-	else if (Rnum >= Gnum & Rnum >= Bnum)
-	{
-		lporigimage = Rchannel;
-		deori(pairs);
-		channel = 2;
-		memcpy(channelEnhanced, lpwmimage, m_ImageSize);
-	}
-	else if(Bnum>=Gnum & Bnum>=Rnum)
-	{
-		lporigimage = Bchannel;
-		deori(pairs);
-		channel = 0;
-		memcpy(channelEnhanced, lpwmimage, m_ImageSize);
-	}
-	Blow = channel;
-	//Bhigh = Bnum;
-
-	//三个记录max、median、min增强后指针的初始化
-	if (hMaxEnhanced)
-	{
-		GlobalFree(hMaxEnhanced);
-		hMaxEnhanced = NULL;
-	}
-	hMaxEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MaxEnhanced = (unsigned char*)hMaxEnhanced;
-
-	if (hMedianEnhanced)
-	{
-		GlobalFree(hMedianEnhanced);
-		hMedianEnhanced = NULL;
-	}
-	hMedianEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MedianEnhanced = (unsigned char*)hMedianEnhanced;
-		
-	if (hMinEnhanced)
-	{
-		GlobalFree(hMinEnhanced);
-		hMinEnhanced = NULL;
-	}
-	hMinEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MinEnhanced = (unsigned char*)hMinEnhanced;
-
-	//增强后max、median、min矩阵赋值
-	int k = 0;
-	Rless = 0, Rmore = 0, Bless = 0, Bmore = 0, Rhigh = 0, Rlow = 0;
-	int maxErrorMax=0, maxErrorMed=0, maxErrorMin=0;
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		double c2 = *(lpC2image + k);
-		double c = *(lpCimage + k);
-		double c2En, cEn;
-		double maxEn, medianEn, minEn;
-		double maxRe, medianRe, minRe;
-		unsigned char maxEnChar, medianEnChar, minEnChar;
-		bool overflow = false;
-		unsigned char maxReChar, medianReChar, minReChar;
-		unsigned char oriMax = *(lpMaximage + i);
-		unsigned char oriMedian = *(lpMediaimage + i);
-		unsigned char oriMin = *(lpMinimage + i);
-		int errorMax = 0, errorMed = 0, errorMin = 0;
-		
-		int row = 211, column = 579;
-		int height, width;
-		if (i== row*ImageWidth+column+GrayHead)
-		{
-			height = (i - GrayHead) / ImageWidth;
-			width = height * ImageWidth;
-		}
-			
-		//若增强的为max
-		if (channel == *(lpMreimage + k))
-		{
-			maxEn = *(channelEnhanced + i);
-			maxEnChar = (unsigned char)maxEn;
-			if (maxEnChar != 0)
-				minEn = maxEn * c2 + 0.5;
-			else
-				minEn = 0;
-			minEnChar = (unsigned char)minEn;
-			if (maxEnChar != minEnChar)
-				medianEn = maxEn * (c - c2 * c + c2) + 0.5;
-			else
-				medianEn = maxEn;
-			medianEnChar = (unsigned char)medianEn;
-			
-			cEn = ((double)(medianEnChar - minEnChar)) / ((double)(maxEnChar - minEnChar));
-			c2En = ((double)minEnChar) / ((double)maxEnChar);
-
-			maxRe = oriMax;
-			maxReChar = (unsigned char)maxRe;
-			if (maxReChar != 0)
-				minRe = maxRe * c2En + 0.5;
-			else
-				minRe = 0;
-			minReChar = (unsigned char)minRe;
-			if (maxReChar != minReChar)
-				medianRe = maxRe * (cEn - c2En * cEn + c2En) + 0.5;
-			else
-				medianRe = maxRe;
-			medianReChar = (unsigned char)medianRe;
-
-			//判断还原后的值与原图值是否相等，相等则赋增强值，不等则赋原值
-			*(MaxEnhanced + i) = *(channelEnhanced + i);
-			if ((unsigned char)minReChar != (unsigned char)oriMin || (unsigned char)medianReChar != (unsigned char)oriMedian)
-			{
-				/*
-				//若不能还愿，则尝试原值+增强通道的前后之差，效果不明显
-				minEn = oriMin + maxEnChar - maxRe;
-				medianEn = oriMedian + maxEnChar - maxRe;
-				*(MinEnhanced + i) = minEn;
-				*(MedianEnhanced + i) = medianEn;
-				if (minEn < 0 || minEn > 255)
-					*(MinEnhanced + i) = oriMin;
-				if (medianEn < 0 || medianEn > 255)
-					*(MedianEnhanced + i) = oriMedian;
-				*/
-
-				/*计算最大差值，没什么用
-				if (minReChar - oriMin > errorMax)
-					errorMax = minReChar - oriMin;
-				if (medianReChar - oriMedian > errorMax)
-					errorMax = medianReChar - oriMedian;
-				*/
-
-				*(MinEnhanced + i) = oriMin;
-				*(MedianEnhanced + i) = oriMedian;
-
-				Rless++;          
-				*(locationMapColor + k) = 1;
-				*(overflowMap + k) = 0;
-			}
-			else
-			{
-				*(MinEnhanced + i) = minEnChar;
-				*(MedianEnhanced + i) = medianEnChar;
-				*(locationMapColor + k) = 0;
-				*(overflowMap + k) = 0;
-				Rmore++;
-			}
-
-		}
-
-		//若增强的为min
-		else if (channel == *(lpMireimage + k))
-		{
-			minEn = *(channelEnhanced + i);
-			minEnChar = (unsigned char)minEn;
-			if (oriMin != 0)
-			{
-				maxEn = minEn / c2 + 0.5;
-				if (maxEn >= 256)
-				{
-					errorMax = maxEn - 255;
-					overflow = true;		//标记为256，表示无法还原到最初值，即max、median不做改变？
-				}
-			}
-			else
-			{
-				overflow = true;			//这种情况需要单独标记？
-				maxEn = 256;
-			}
-				
-			maxEnChar = (unsigned char)maxEn;
-			if (oriMin != 0)
-			{
-				medianEn = minEn * (c / c2 + 1 - c) + 0.5;
-				if (medianEn >= 256)
-				{
-					errorMed = medianEn - 255;
-					overflow = true;
-				}
-			}
-			else {
-				overflow = true;
-				medianEn = 256;
-			}
-				
-			medianEnChar = (unsigned char)medianEn;
-
-			/*
-			maxEnChar = (unsigned char)maxEn;
-			medianEnChar = (unsigned char)medianEn;
-			minEnChar = (unsigned char)minEn;
-			*/
-
-			cEn = ((double)(medianEnChar - minEnChar)) / ((double)(maxEnChar - minEnChar));
-			c2En = ((double)minEnChar) / ((double)maxEnChar);
-
-			minRe = oriMin;
-			minReChar = (unsigned char)minRe;
-			if (minEnChar != 0)
-				maxRe = minRe / c2En + 0.5;
-			else
-				maxRe = maxEn;
-			maxReChar = (unsigned char)maxRe;
-			if (minEnChar != 0)
-				medianRe = minRe * (cEn / c2En + 1 - cEn) + 0.5;
-			else
-				medianRe = medianEn;
-			medianReChar = (unsigned char)medianRe;
-			
-
-			*(MinEnhanced + i) = *(channelEnhanced + i);
-			if ((unsigned char)maxReChar != (unsigned char)oriMax || (unsigned char)medianReChar != (unsigned char)oriMedian)
-			{
-				/*
-				//若不能还愿，则尝试原值+增强通道的前后之差，效果不明显
-				maxEn = oriMax + minEnChar - minRe;
-				medianEn = oriMedian + minEnChar - minRe;
-				*(MaxEnhanced + i) = maxEn;
-				*(MedianEnhanced + i) = medianEn;
-				if (maxEn > 255 || maxEn < 0)
-					*(MaxEnhanced + i) = *(lpMaximage + i);
-				if (medianEn > 255 || medianEn < 0)
-					*(MedianEnhanced + i) = *(lpMediaimage + i);
-				*/
-				if (overflow==true)
-				{
-					*(overflowMap + k) = 1;
-					*(locationMapColor + k) = 0;
-					Bless++;
-				}
-				else
-				{
-					*(locationMapColor + k) = 1;
-					*(overflowMap + k) = 0;
-				}
-
-				*(MaxEnhanced + i) = *(lpMaximage + i);
-				*(MedianEnhanced + i) = *(lpMediaimage + i);
-
-				if (maxReChar - oriMax > errorMax)
-					errorMax = maxReChar - oriMax;
-				if (medianReChar - oriMedian > errorMax)
-					errorMax = medianReChar - oriMedian;
-
-			}
-			else
-			{
-				*(MaxEnhanced + i) = maxEnChar;
-				*(MedianEnhanced + i) = medianEnChar;
-				Bmore++;
-				*(locationMapColor + k) = 0;
-				*(overflowMap + k) = 0;
-			}
-		}
-		 
-		//若增强的为median
-		else if (channel == *(lpMereimage + k))
-		{
-			medianEn = *(channelEnhanced + i);
-			medianEnChar = (unsigned char)medianEn;
-			if (oriMax != 0 && (c2 + c - c * c2) != 0)
-			{
-				maxEn = medianEn / (c2 + c - c * c2) + 0.5;
-				if (maxEn >= 256)
-				{
-					errorMax = maxEn - 255;
-					overflow = true;		//标记为256，表示无法还原到最初值，即max、median不做改变？
-				}
-			}
-			else {
-				overflow = true;			//这种情况需要单独标记？
-				maxEn = 256;
-			}				
-			maxEnChar = (unsigned char)maxEn;
-			if (oriMax != 0 && (c2 + c - c * c2) != 0)
-			{
-				minEn = medianEn * c2 / (c2 + c - c * c2) + 0.5;
-				if (minEn >= 256)
-				{
-					errorMin = minEn - 255;
-					overflow = true;
-				}
-			}
-			else {
-				overflow = true;
-				minEn = 256;
-			}
-			minEnChar = (unsigned char)minEn;
-
-
-			/*
-			maxEnChar = (unsigned char)maxEn;
-			medianEnChar = (unsigned char)medianEn;
-			minEnChar = (unsigned char)minEn;
-			*/
-
-			cEn = ((double)(medianEnChar - minEnChar)) / ((double)(maxEnChar - minEnChar));
-			c2En = ((double)minEnChar) / ((double)maxEnChar);
-
-			medianRe = oriMedian;
-			medianReChar = (unsigned char)medianRe;
-			if (maxEnChar != 0 && (c2En + cEn - cEn * c2En) != 0)
-				maxRe = medianRe / (c2En + cEn - cEn * c2En) + 0.5;
-			else
-				maxRe = maxEn;
-			maxReChar = (unsigned char)maxRe;
-			if (maxEnChar != 0 && (c2En + cEn - cEn * c2En) != 0)
-				minRe = medianRe * c2En / (c2En + cEn - cEn * c2En) + 0.5;
-			else
-				minRe = minEn;
-			minReChar = (unsigned char)minRe;
-
-			/*
-			maxReChar = (unsigned char)maxRe;
-			medianReChar = (unsigned char)medianRe;
-			minReChar = (unsigned char)minRe;
-			*/
-
-			*(MedianEnhanced + i) = *(channelEnhanced + i);
-			if ((unsigned char)maxReChar != (unsigned char)oriMax || (unsigned char)minReChar != (unsigned char)oriMin)
-			{
-				/*
-				//若不能还愿，则尝试原值+增强通道的前后之差，效果不明显
-				maxEn = oriMax + medianEnChar - medianRe;
-				minEn = oriMin + medianEnChar - medianRe;
-				*(MaxEnhanced + i) = *(lpMaximage + i);
-				*(MinEnhanced + i) = *(lpMinimage + i);
-				if (maxEn > 255 || maxEn < 0)
-					*(MaxEnhanced + i) = *(lpMaximage + i);
-				if (minEn > 255 || minEn < 0)
-					*(MinEnhanced + i) = *(lpMinimage + i);
-				*/
-				
-				if (overflow==true)
-				{
-					*(locationMapColor + k) = 0;
-					*(overflowMap + k) = 1;
-					Bless++;
-				}
-				else 
-				{
-					*(locationMapColor + k) = 1;
-					*(overflowMap + k) = 0;
-				}
-				*(MaxEnhanced + i) = *(lpMaximage + i);
-				*(MinEnhanced + i) = *(lpMinimage + i);
-			}
-			else
-			{
-				*(MaxEnhanced + i) = maxEnChar;
-				*(MinEnhanced + i) = minEnChar;
-				*(locationMapColor + k) = 0;
-				*(overflowMap + k) = 0;
-				Rhigh++;
-			}
-		}
-		k++;
-		if (maxErrorMax < errorMax)	maxErrorMax = errorMax;
-		if (maxErrorMed < errorMed)	maxErrorMed = errorMed;
-		if (maxErrorMin < errorMin)	maxErrorMin = errorMin;
-		//Bhigh = errorMax;
-	}
-
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	//int max;
-	//int t;
-	k = 0;
-	int j = GrayHead;
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-		*(lpwmimage + i + *(lpMreimage + k)) = *(MaxEnhanced + j);
-		*(lpwmimage + i + *(lpMereimage + k)) = *(MedianEnhanced + j);
-		*(lpwmimage + i + *(lpMireimage + k)) = *(MinEnhanced + j);
-		j++;
-		k++;
-	}
-	
-	////////////////////////////////////////////////
-	/*预测方法运用尝试*/
-	if (hRchannelEnhanced)
-	{
-		GlobalFree(hRchannelEnhanced);
-		hRchannelEnhanced = NULL;
-	}
-	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
-
-	if (hGchannelEnhanced)
-	{
-		GlobalFree(hGchannelEnhanced);
-		hGchannelEnhanced = NULL;
-	}
-	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
-
-	if (hBchannelEnhanced)
-	{
-		GlobalFree(hBchannelEnhanced);
-		hBchannelEnhanced = NULL;
-	}
-	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
-
-	z = GrayHead;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(RchannelEnhanced + z) = *(lpwmimage + j + 2);
-		*(GchannelEnhanced + z) = *(lpwmimage + j + 1);
-		*(BchannelEnhanced + z) = *(lpwmimage + j);
-		z++;
-	}
-
-	if (hreferOri1)
-	{
-		GlobalFree(hreferOri1);
-		hreferOri1 = NULL;
-	}
-	hreferOri1 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referOri1 = (unsigned char*)hreferOri1;
-
-	if (hreferOri2)
-	{
-		GlobalFree(hreferOri2);
-		hreferOri2 = NULL;
-	}
-	hreferOri2 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referOri2 = (unsigned char*)hreferOri2;
-
-	if (hreferEn1)
-	{
-		GlobalFree(hreferEn1);
-		hreferEn1 = NULL;
-	}
-	hreferEn1 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referEn1 = (unsigned char*)hreferEn1;
-
-	if (hreferEn2)
-	{
-		GlobalFree(hreferEn2);
-		hreferEn2 = NULL;
-	}
-	hreferEn2 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referEn2 = (unsigned char*)hreferEn2;
-
-	if (hreferPredict1Ori)
-	{
-		GlobalFree(hreferPredict1Ori);
-		hreferPredict1Ori = NULL;
-	}
-	hreferPredict1Ori = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referPredict1Ori = (unsigned char*)hreferPredict1Ori;
-
-	if (hreferPredict2Ori)
-	{
-		GlobalFree(hreferPredict2Ori);
-		hreferPredict2Ori = NULL;
-	}
-	hreferPredict2Ori = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referPredict2Ori = (unsigned char*)hreferPredict2Ori;
-
-	if (hreferPredict1En)
-	{
-		GlobalFree(hreferPredict1En);
-		hreferPredict1En = NULL;
-	}
-	hreferPredict1En = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referPredict1En = (unsigned char*)hreferPredict1En;
-
-	if (hreferPredict2En)
-	{
-		GlobalFree(hreferPredict2En);
-		hreferPredict2En = NULL;
-	}
-	hreferPredict2En = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referPredict2En = (unsigned char*)hreferPredict2En;
-
-	if (hreferHoldOri)
-	{
-		GlobalFree(hreferHoldOri);
-		hreferHoldOri = NULL;
-	}
-	hreferHoldOri = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referHoldOri = (unsigned char*)hreferHoldOri;
-
-	if (hreferHoldEn)
-	{
-		GlobalFree(hreferHoldEn);
-		hreferHoldEn = NULL;
-	}
-	hreferHoldEn = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	referHoldEn = (unsigned char*)hreferHoldEn;
-
-	if (hmapFlow)
-	{
-		GlobalFree(hmapFlow);
-		hmapFlow = NULL;
-	}
-	hmapFlow = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	mapFlow = (unsigned char*)hmapFlow;
-
-	if (hmapFlow2)
-	{
-		GlobalFree(hmapFlow2);
-		hmapFlow2 = NULL;
-	}
-	hmapFlow2 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	mapFlow2 = (unsigned char*)hmapFlow2;
-
-	if (channel == 0)
-	{
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(referOri1 + i) = *(Rchannel + i);
-			*(referOri2 + i) = *(Gchannel + i);
-			*(referHoldOri + i) = *(Bchannel + i);
-			
-			*(referEn1 + i) = *(RchannelEnhanced + i);
-			*(referEn2 + i) = *(GchannelEnhanced + i);
-			*(referHoldEn + i) = *(BchannelEnhanced + i);
-		}
-	}
-	else if (channel == 1)
-	{
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(referOri1 + i) = *(Rchannel + i);
-			*(referHoldOri + i) = *(Gchannel + i);
-			*(referOri2 + i) = *(Bchannel + i);
-
-			*(referEn1 + i) = *(RchannelEnhanced + i);
-			*(referHoldEn + i) = *(GchannelEnhanced + i);
-			*(referEn2 + i) = *(BchannelEnhanced + i);
-		}
-	}
-	else if (channel == 2)
-	{
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(referHoldOri + i) = *(Rchannel + i);
-			*(referOri1 + i) = *(Gchannel + i);
-			*(referOri2 + i) = *(Bchannel + i);
-
-			*(referHoldEn + i) = *(RchannelEnhanced + i);
-			*(referEn1 + i) = *(GchannelEnhanced + i);
-			*(referEn2 + i) = *(BchannelEnhanced + i);
-		}
-	}
-
-	/*
-	k = 0;
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			double ori1Sum, en1Sum, ori2Sum, en2Sum;
-			ori1Sum = 0, en1Sum = 0, ori2Sum = 0, en2Sum = 0;
-			if (*(locationMapColor + row * ImageWidth + column) == 1)
-			{
-				int num = 0;
-				for (int i = row - 1; i <= row + 1; i++)
-					for (int j = column - 1; j <= column + 1; j++)
-					{
-						if (j<0 || j>=ImageWidth || i<0 || i>=ImageHeight)
-							continue;
-						if (*(locationMapColor + i * ImageWidth + j) == 0)
-						{
-							ori1Sum = *(referOri1 + i * ImageWidth + j + GrayHead) + ori1Sum;
-							ori2Sum = *(referOri2 + i * ImageWidth + j + GrayHead) + ori2Sum;
-							en1Sum = *(referEn1 + i * ImageWidth + j + GrayHead) + en1Sum;
-							en2Sum = *(referEn2 + i * ImageWidth + j + GrayHead) + en2Sum;
-							num++;
-						}
-					}
-				
-				if (num == 0)
-				{
-					*(mapFlow + k) = 1;
-				}
-				else
-				{
-					int ori1Ave = ori1Sum / num + 0.5;
-					int ori2Ave = ori2Sum / num + 0.5;
-					int en1Ave = en1Sum / num + 0.5;
-					int en2Ave = en2Sum / num + 0.5;
-
-					int referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
-					int referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
-
-					int correlation1 = en1Ave + (ori1Ave - referOri1Val);
-					int correlation2 = en2Ave + (ori2Ave - referOri2Val);
-
-					if (correlation1 > 255 || correlation2 > 255 || correlation1 < 0 || correlation2 < 0)
-					{
-						*(mapFlow + k) = 1;
-					}
-					else
-					{
-						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1;
-						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
-						*(mapFlow + k) = 0;
-					}
-					
-				}
-				k++;
-			}
-		}
-	*/
-
-	/*
-	k = 0;
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			int ori1Diff, ori2Diff, ori1MinDiff, ori2MinDiff, correlation1, correlation2;
-			ori1MinDiff = 256, ori2MinDiff = 256;
-			if (*(locationMapColor + row * ImageWidth + column) == 1)
-			{
-				int num = 0;
-				int neighbor1[4], neighbor2[4];
-
-				int referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
-				int referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
-
-				for (int i = row - 1; i <= row; i++)
-					for (int j = column - 1; j <= column; j++)
-					{
-						if (num != 3)
-						{
-							if (j < 0 || j >= ImageWidth || i < 0 || i >= ImageHeight)
-								continue;
-						//if (*(locationMapColor + i * ImageWidth + j) == 0)
-						//{
-							ori1Diff = *(referOri1 + i * ImageWidth + j + GrayHead) - referOri1Val;
-							ori2Diff = *(referOri2 + i * ImageWidth + j + GrayHead) - referOri2Val;
-							if (abs(ori1Diff) < abs(ori1MinDiff))
-							{
-								ori1MinDiff = ori1Diff;
-								correlation1 = *(referEn1 + i * ImageWidth + j + GrayHead) + ori1MinDiff;
-							}
-							if (abs(ori2Diff) < abs(ori2MinDiff))
-							{
-								ori2MinDiff = ori2Diff;
-								correlation2 = *(referEn2 + i * ImageWidth + j + GrayHead) + ori2MinDiff;
-							}
-							num++;
-						}
-						
-						//}
-					}
-
-				if (num == 0)
-				{
-					*(mapFlow + k) = 1;
-				}
-				else
-				{
-					if (correlation1 > 255 || correlation2 > 255 || correlation1 < 0 || correlation2 < 0)
-					{
-						*(mapFlow + k) = 1;
-					}
-					else
-					{
-						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1;
-						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
-						*(mapFlow + k) = 0;
-					}
-
-				}
-				k++;
-			}
-		}
-	*/
-	
-	/*
-	k = 0;
-	for(int row=0;row<ImageHeight;row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			int medOri1, medOri2, medEn1, medEn2;
-			int oriNeighbor1[3], enNeighbor1[3], oriNeighbor2[3], enNeighbor2[3];
-			int correlation1, correlation2;
-			if (*(locationMapColor + row * ImageWidth + column) == 0)     //若map标记0，则可用原值       
-			{
-				*(referPredict1Ori + row * ImageWidth + column + GrayHead) = *(referOri1 + row * ImageWidth + column + GrayHead);
-				*(referPredict1En + row * ImageWidth + column + GrayHead) = *(referEn1 + row * ImageWidth + column + GrayHead);
-				*(referPredict2Ori + row * ImageWidth + column + GrayHead) = *(referOri2 + row * ImageWidth + column + GrayHead);
-				*(referPredict2En + row * ImageWidth + column + GrayHead) = *(referEn2 + row * ImageWidth + column + GrayHead);
-			}
-			else if (*(locationMapColor + row * ImageWidth + column) == 1)
-			{
-				int num = 0;
-				for(int i =row-1;i<=row;i++)
-					for (int j = column - 1; j <= column; j++)
-					{
-						if (num < 3)
-						{
-							if (j < 0 || j >= ImageWidth || i < 0 || i >= ImageHeight)
-							{
-								num++;
-								continue;
-							}
-							oriNeighbor1[num] = *(referPredict1Ori + i * ImageWidth + j + GrayHead);
-							enNeighbor1[num] = *(referPredict1En + i * ImageWidth + j + GrayHead);
-							oriNeighbor2[num] = *(referPredict2Ori + i * ImageWidth + j + GrayHead);
-							enNeighbor2[num] = *(referPredict2En + i * ImageWidth + j + GrayHead);
-							num++;
-						}
-						
-					}
-
-				medOri1 = MED(oriNeighbor1[0], oriNeighbor1[1], oriNeighbor1[2]);
-				medOri2 = MED(oriNeighbor2[0], oriNeighbor2[1], oriNeighbor2[2]);
-				medEn1 = MED(enNeighbor1[0], enNeighbor1[1], enNeighbor1[2]);
-				medEn2 = MED(enNeighbor2[0], enNeighbor2[1], enNeighbor2[2]);
-
-				int referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
-				int referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
-
-				if ((medOri1 - referOri1Val) < 10 && (medOri2 - referOri2Val) < 10)
-				{
-					correlation1 = medEn1 + (medOri1 - referOri1Val);
-					correlation2 = medEn2 + (medOri2 - referOri2Val);
-
-					if (correlation1 > 255 || correlation1 < 0 || correlation2 > 255 || correlation2 < 0)
-					{
-						*(mapFlow + k) = 1;
-					}
-					else
-					{
-						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1;
-						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
-						*(mapFlow + k) = 0;
-					}
-				}
-				else
-				{
-					*(mapFlow + k) = 1;
-				}
-
-				k++;
-
-			}
-		}
-	*/
-	int kkk=0;
-	int max=0,min=256;
-	k = 0;
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			int predictOri1, predictOri2, predictEn1, predictEn2, referOri1Val, referOri2Val;
-			int oriNeighbor1[3], enNeighbor1[3], oriNeighbor2[3], enNeighbor2[3];
-			int correlation1, correlation2;
-			if (*(locationMapColor + row * ImageWidth + column) == 0)     //若map标记0，则可用原值       
-			{
-				*(referPredict1Ori + row * ImageWidth + column + GrayHead) = *(referOri1 + row * ImageWidth + column + GrayHead);
-				*(referPredict1En + row * ImageWidth + column + GrayHead) = *(referEn1 + row * ImageWidth + column + GrayHead);
-				*(referPredict2Ori + row * ImageWidth + column + GrayHead) = *(referOri2 + row * ImageWidth + column + GrayHead);
-				*(referPredict2En + row * ImageWidth + column + GrayHead) = *(referEn2 + row * ImageWidth + column + GrayHead);
-			}
-			else if (*(locationMapColor + row * ImageWidth + column) == 1)
-			{
-				int error = *(referHoldEn + row * ImageWidth + column + GrayHead) - *(referHoldOri + row * ImageWidth + column + GrayHead);
-				unsigned char en = *(referHoldEn + row * ImageWidth + column + GrayHead);
-				unsigned char ori = *(referHoldOri + row * ImageWidth + column + GrayHead);
-				error = abs(error);
-				if (error > max )	max = error;
-				if (error < min)	min = error;
-				if (max == 255)
-					max = error;
-
-				predictOri1 = predict(referHoldOri, referPredict1Ori, row, column);
-				*(referPredict1Ori + row * ImageWidth + column + GrayHead) = predictOri1;
-
-				predictEn1 = predict(referHoldEn, referPredict1En, row, column);
-				*(referPredict1En + row * ImageWidth + column + GrayHead) = predictEn1;
-
-				predictOri2 = predict(referHoldOri, referPredict2Ori, row, column);
-				*(referPredict2Ori + row * ImageWidth + column + GrayHead) = predictOri2;
-
-				predictEn2 = predict(referHoldEn, referPredict2En, row, column);
-				*(referPredict2En + row * ImageWidth + column + GrayHead) = predictEn2;
-
-				referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
-				referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
-				
-				if ((predictOri1 - referOri1Val) < 10 && (predictOri2 - referOri2Val) < 10)
-				{
-					correlation1 = predictEn1 + (predictOri1 - referOri1Val);                        //顺序要注意
-					correlation2 = predictEn2 + (predictOri2 - referOri2Val);
-				//if (predictOri1 != 0 && predictOri2 != 0)
-				//{
-					//correlation1 = predictEn1 * (referOri1Val / predictOri1);                        //顺序要注意
-					//correlation2 = predictEn2 * (referOri2Val / predictOri2);
-										
-					if (correlation1 > 255 || correlation1 < 0 || correlation2 > 255 || correlation2 < 0)
-					{
-						*(mapFlow + k) = 1;
-					}
-					else
-					{
-						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1; 
-						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
-						*(mapFlow + k) = 0;
-						kkk++;
-					}
-					
-				}
-				else
-				{
-					*(mapFlow + k) = 1;
-				}
-				
-
-				k++;
-			}
-		}
-		
-	mapFlowLen = k;
-
-	if (channel == 0)
-	{
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(RchannelEnhanced + i) = *(referEn1 + i);
-			*(GchannelEnhanced + i) = *(referEn2 + i);
-		}
-	}
-	else if (channel == 1)
-	{
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(RchannelEnhanced + i) = *(referEn1 + i);
-			*(BchannelEnhanced + i) = *(referEn2 + i);
-		}
-	}
-	else if (channel == 2)
-	{
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(GchannelEnhanced + i) = *(referEn1 + i);
-			*(BchannelEnhanced + i) = *(referEn2 + i);
-		}
-	}
-
-	j = GrayHead;
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-		*(lpwmimage + i + 2) = *(RchannelEnhanced + j);
-		*(lpwmimage + i + 1) = *(GchannelEnhanced + j);
-		*(lpwmimage + i) = *(BchannelEnhanced + j);
-		j++;
-	}
-
-	///////////////////////////////
-
-	/*locationMap压缩*/
-	if (hlocationCompression)
-	{
-		GlobalFree(hlocationCompression);
-	}
-	hlocationCompression = GlobalAlloc(GMEM_FIXED, locationMapSize);
-	locationCompression = (unsigned char *)hlocationCompression;
-	for (int i = 0; i < locationMapSize; i++)
-		*(locationCompression + i) = 0;
-
-	if (hmapBeforeCompression)
-	{
-		GlobalFree(hmapBeforeCompression);
-	}
-	hmapBeforeCompression = GlobalAlloc(GMEM_FIXED, locationMapSize);
-	mapBeforeCompression = (unsigned char *)hmapBeforeCompression;
-	for (int i = 0; i < locationMapSize; i++)
-		*(mapBeforeCompression + i) = 0;
-	
-	for(int row=0;row<ImageHeight;row++)
-		for (int column = 0; column < locationMapWidth; column++)
-		{
-			int sign = row * ImageWidth + column;
-
-			if (column % 8 == 0) location8 = 0;
-
-			if (column < ImageWidth)
-			{
-				if (*(locationMapColor + sign) == 1)
-					location8 = (location8 << 1) + 1;
-				else
-					location8 = (location8 << 1) + 0;
-			}
-			else
-				location8 = (location8 << 1) + 0;
-
-			if (column % 8 == 7)            *(mapBeforeCompression + (row*locationMapWidth + column) / 8) = location8;
-		}
-	
-
-	memcpy(locationCompression, mapBeforeCompression, locationMapSize);
-
-	testbuf_len = 0;
-
-	testbuf = (unsigned char *)checkedmalloc(TESTBUF_SIZE);                        //压缩后输出
-
-	jbg85_enc_init(&s, locationMapWidth, ImageHeight, testbuf_writel, NULL);                //初始化
-	jbg85_enc_options(&s, JBG_TPBON, 0, -1);                                       //参数传递
-
-	for (int row = 0; row < ImageHeight; row++)
-		jbg85_enc_lineout(&s, locationCompression + row * locationMapWidth / 8, locationCompression + (row - 1)*locationMapWidth / 8, locationCompression + (row - 2)*locationMapWidth / 8);    //参数：一行，前一行，前前一行
-
-	buflen = testbuf_len;
-
-	memcpy(locationCompression, testbuf, buflen);
-
-	ColorLocationMap(locationCompression, buflen, channel);
-
-	addDataLen = buflen + sizeof(long) + sizeof(int);
-
-	int num_1 = 0, num_0 = 0;
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		if (*(overflowMap + i) == 1)	num_1++;
-		num_0 = ImageWidth * ImageHeight - num_1;
-	}
-	int num_3 = 0, num_4 = 0;
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		if (*(locationMapColor + i) == 1)	num_3++;
-		num_4 = ImageWidth * ImageHeight - num_3;
-	}
-	int maxUnre = -1, minUnre = 256;
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		int pixelEn,pixelOri;
-		if (*(locationMapColor + i) == 1)
-		{
-			pixelEn = *(referHoldEn + i + GrayHead);
-			pixelOri = *(referHoldOri + i + GrayHead);
-			if (maxUnre < pixelOri)       maxUnre = pixelOri;
-			if (minUnre > pixelOri)		minUnre = pixelOri;
-		}
-	}
-
-	int numUn[256], numTotal[256], value[256], label = 0;
-	for (int i = 0; i < 256; i++) {
-		numUn[i] = 0;
-		value[i] = -1;
-		numTotal[i] = 0;
-	}
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		if (*(locationMapColor + i) == 1) {
-			for (int k = 0; k < 256; k++){
-				if (*(referHoldOri + i + GrayHead) == value[k])
-					break;
-				if (k == 255)
-				{
-					value[label] = *(referHoldOri + i + GrayHead);
-					label++;
-				}
-			}
-		}
-	}
-
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		if (*(locationMapColor + i) == 1)
-		{
-			for (int k = 0; k < 256; k++)
-			{
-				if (*(referHoldOri + i + GrayHead) == value[k])
-				{
-					numUn[k]++;
-					numTotal[k]++;
-					break;
-				}
-			}
-		}
-		else
-		{
-			for (int k = 0; k < 256; k++)
-			{
-				if (*(referHoldOri + i + GrayHead) == value[k])
-				{
-					numTotal[k]++;
-					break;
-				}
-			}
-		}
-	}
-
-	int markNumTotal = 0;
-	for (int i = 0; i < 256; i++) {
-		markNumTotal = markNumTotal + numTotal[i];
-	}
-	//ColorToThreeTimesGray();
-}
-
-int CDeprejbgDoc::MED(int c, int b, int a)
-{
-	int max, min;
-	if (a > b)
-		max = a, min = b;
-	else
-		max = b, min = a;
-
-	int x;
-	x = a + b - c;
-	if (c > max)
-		return min;
-	else if (c < min)
-		return max;
-	else
-		return x;
-	
-}
-
-int CDeprejbgDoc::predict(unsigned char *refer, unsigned char *bePredicted, int row, int column)
-{
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-
-	int predict, threshold, diff;
-	int Dm, Dh, Dv, Dd, Dad, De;
-	int Ir;
-	int pixel[8];
-	int num = 0;
-
-	Ir = *(refer + GrayHead + row * ImageWidth + column);
-	threshold = 10;        //threshold = {1,2,...,10} 待确定
-
-	for(int i=row-1;i<=row+1;i++)
-		for (int j = column - 1; j <= column + 1; j++)
-		{
-			if (i == row && j == column)
-				continue;
-
-			pixel[num] = *(refer + GrayHead + i * ImageWidth + j);
-			num++;
-		}
-
-	Dm = 0;
-	for (int i = 0; i < num; i++)
-		Dm = pixel[i] + Dm;
-	Dm = abs(Dm / 8 - Ir);
-
-	Dh = (pixel[3] + pixel[4]) / 2 - Ir;
-	Dh = abs(Dh);
-
-	Dv = (pixel[1] + pixel[6]) / 2 - Ir;
-	Dv = abs(Dv);
-
-	Dd = (pixel[0] + pixel[7]) / 2 - Ir;
-	Dd = abs(Dd);
-
-	Dad = (pixel[2] + pixel[5]) / 2 - Ir;
-	Dad = abs(Dad);
-
-	//De = min{Dh, Dv, Dd, Dad}
-	De = Dh;
-	if (De > Dv)		De = Dv;
-	if (De > Dd)		De = Dd;
-	if (De > Dad)		De = Dad;
-
-	diff = abs(Dm - De);
-	if (diff <= threshold)
-	{
-		predict = (*(bePredicted + GrayHead + (row - 1)*ImageWidth + column) + *(bePredicted + GrayHead + row * ImageWidth + column - 1)) / 2;
-	}
-	else
-	{
-		if (De == Dh)
-			predict = *(bePredicted + GrayHead + row * ImageWidth + column - 1);
-		else if (De == Dv)
-			predict = *(bePredicted + GrayHead + (row - 1) * ImageWidth + column);
-		else if (De == Dd)
-			predict = *(bePredicted + GrayHead + (row - 1) * ImageWidth + column - 1);
-		else
-			predict = *(bePredicted + GrayHead + (row - 1) * ImageWidth + column + 1);
-	}
-
-	return predict;
-}
-
-void CDeprejbgDoc::enhancedMaxRe()
-{
-	//bool haveChannel = true;
-	//ColorToThreeTimesGrayRecovery(haveChannel);
-
-	/*记录位置图新增定义*/
-	struct jbg85_dec_state d;
-	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
-	long locationMapSize;              //locationmap大小
-	unsigned char location8;           //一个字节，记录8个位置
-	unsigned char *image, *buffer;
-	size_t plane_size, buffer_len;
-	size_t cnt;
-
-	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
-	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//表明增强了哪个通道
-	int channelChosen = channelChosenExtract;
-
-	//调用RGBpre，排序，计算c、c2
-	depreRGBPre(lpwmimage);
-
-	//初始化
-	if (hMaxRecover)
-	{
-		GlobalFree(hMaxRecover);
-		hMaxRecover = NULL;
-	}
-	hMaxRecover = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MaxRecover = (unsigned char*)hMaxRecover;
-
-	if (hMedianRecover)
-	{
-		GlobalFree(hMedianRecover);
-		hMedianRecover = NULL;
-	}
-	hMedianRecover = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MedianRecover = (unsigned char*)hMedianRecover;
-
-	if (hMinRecover)
-	{
-		GlobalFree(hMinRecover);
-		hMinRecover = NULL;
-	}
-	hMinRecover = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MinRecover = (unsigned char*)hMinRecover;
-
-	if (hchannelRecovery)
-	{
-		GlobalFree(hchannelRecovery);
-		hchannelRecovery = NULL;
-	}
-	hchannelRecovery = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	channelRecovery = (unsigned char*)hchannelRecovery;
-
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	//增强后各通道赋值
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lpwmimage + j + 2);
-		*(Gchannel + GrayHead + z) = *(lpwmimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lpwmimage + j);
-		z++;
-	}
-
-	//初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//判断被增强的为何通道，并进行还原
-	if (channelChosen == 2)
-	{
-		memcpy(lppreimage, Rchannel, m_ImageSize);
-		depre();
-	}
-	else if (channelChosen == 1)
-	{
-		memcpy(lppreimage, Gchannel, m_ImageSize);
-		depre();
-	}
-	else if (channelChosen == 0)
-	{
-		memcpy(lppreimage, Bchannel, m_ImageSize);
-		depre();
-	}
-	memcpy(channelRecovery, lpwmimage, m_ImageSize);
-
-	/*map解压*/
-
-	plane_size = ImageHeight * locationMapWidth;
-	int result;
-
-	//buffer_len = ((lmwidth >> 3) + !!(lmwidth & 7)) * 3;            //缓冲区长度
-	buffer_len = plane_size;
-	buffer = (unsigned char *)checkedmalloc(buffer_len);           //缓冲区分配内存
-	image = (unsigned char *)checkedmalloc(plane_size);            //输出图像分配内存
-	jbg85_dec_init(&d, buffer, buffer_len, line_out, image);
-	result = jbg85_dec_in(&d, locationCompression, buflen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
-	//result = jbg85_dec_in(&d, colorLocationMap, ExtractMapLen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
-
-	/*解压后map移位赋值*/
-	if (hcolorMapRecover)
-	{
-		GlobalFree(hcolorMapRecover);
-		hcolorMapRecover = NULL;
-	}
-	hcolorMapRecover = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	colorMapRecover = (unsigned char*)hcolorMapRecover;
-
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			int i = column / 8;                                                 //求location map的宽
-			int sign = 7 + i * 8 - column;                                             //计算右移对应的位数，
-			unsigned char tmp = *(image + row * locationMapWidth / 8 + i);                               //读取对应的预处理location map数据，一个
-			int m = (tmp >> sign) & 1;
-			*(colorMapRecover + row * ImageWidth + column) = m;
-		}
-
-
-	/*恢复*/
-	int k = 0;
-	//int num = 0;
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		double c2En = *(lpC2image + k);
-		double cEn = *(lpCimage + k);
-		double maxRe, medianRe, minRe;
-		unsigned char maxEnChar, medianEnChar, minEnChar;
-		unsigned char maxReChar, medianReChar, minReChar;
-
-		//当增强通道的目前遍历到的像素是max
-		if (channelChosen == *(lpMreimage + k))
-		{
-			maxRe = *(channelRecovery + i);
-			maxReChar = (unsigned char)maxRe;
-			if (*(colorMapRecover + k) == 0)
-			{
-				if (maxReChar != 0)
-					minRe = maxRe * c2En + 0.5;
-				else
-					minRe = 0;
-				minReChar = (unsigned char)minRe;
-				if (maxReChar != minReChar)
-					medianRe = maxRe * (cEn - c2En * cEn + c2En) + 0.5;
-				else
-					medianRe = maxRe;
-				medianReChar = (unsigned char)medianRe;
-			}
-			else
-			{
-				minReChar = *(lpMinimage+ i);
-				medianReChar = *(lpMediaimage + i);
-			}
-		}
-
-		//当增强通道的目前遍历到的像素是min
-		else if (channelChosen == *(lpMireimage + k))
-		{
-			minRe = *(channelRecovery + i);
-			minReChar = (unsigned char)minRe;
-			if (*(colorMapRecover + k) == 0)
-			{
-				maxRe = minRe / c2En + 0.5;
-				medianRe = minRe * (cEn / c2En + 1 - cEn) + 0.5;
-				maxReChar = (unsigned char)maxRe;
-				medianReChar = (unsigned char)medianRe;
-			}
-			else
-			{
-				maxReChar = *(lpMaximage + i);
-				medianReChar = *(lpMediaimage + i);
-			}
-		}
-
-		//当增强通道的目前遍历到的像素是median
-		else if (channelChosen == *(lpMereimage + k))
-		{
-			medianRe = *(channelRecovery + i);
-			medianReChar = (unsigned char)medianRe;
-			if (*(colorMapRecover + k) == 0)
-			{
-				maxRe = medianRe / (c2En + cEn - cEn * c2En) + 0.5;
-				minRe = medianRe * c2En / (c2En + cEn - cEn * c2En) + 0.5;
-				maxReChar = (unsigned char)maxRe;
-				minReChar = (unsigned char)minRe;
-			}
-			else
-			{
-				maxReChar = *(lpMaximage + i);
-				minReChar = *(lpMinimage + i);
-			}
-
-		}
-
-		*(MaxRecover + i) = maxReChar;
-		*(MedianRecover + i) = medianReChar;
-		*(MinRecover + i) = minReChar;
-
-		k++;
-	}
-
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	//int max;
-	//int t;
-	k = 0;
-	int j = GrayHead;
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-		*(lpwmimage + i + *(lpMreimage + k)) = *(MaxRecover + j);
-		*(lpwmimage + i + *(lpMereimage + k)) = *(MedianRecover + j);
-		*(lpwmimage + i + *(lpMireimage + k)) = *(MinRecover + j);
-		j++;
-		k++;
-	}
-
-}
-
-void CDeprejbgDoc::Test(){
-	struct jbg85_enc_state s;
-	int lmwidth;
-	unsigned char tmp;
-	long g;
-
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-	lp = lporigimage + GrayHead;
-	
-	lmwidth = 8 * ((ImageWidth + 7) / 8);       //将图片宽度改成向上取到可以被8整除
-
-	g = ImageHeight * lmwidth / 8;         //locationmap大小
-
-	if (hhismap)
-	{
-		GlobalFree(hhismap);
-	}
-	hhismap = GlobalAlloc(GMEM_FIXED, g);
-	lphismap = (unsigned char *)hhismap;
-	for (int i = 0; i < g; i++)
-		*(lphismap + i) = 0;              //location map初始化 都赋值0
-
-	
-
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < lmwidth; column++)
-		{
-			if (column % 8 == 0)	lm = 0;                         //以8位为长度，起始时先置0
-
-			if (column < ImageWidth)
-			{
-				tmp = *(lp + row * ImageWidth + column);          //lp还是处理前图像的指针，此处为读取原图像的像素值
-				if (tmp < 129)									
-					lm = (lm << 1) + 1;
-				else
-					lm = (lm << 1) + 0;                        //若读到的像素为满足条件的值， 则记录变量lm左移一位后置1，若不为满足条件的值，则记录变量lm左移一位后置0
-			}
-			else
-				lm = (lm << 1) + 0;                           //当超出原图宽度时都使用0填充
-
-			if (column % 8 == 7)	*(lphismap + (row*lmwidth + column) / 8) = lm;      //到第8位时将lm赋值到map中
-		}
-
-	if (hlocmap)
-	{
-		GlobalFree(hlocmap);
-	}
-	hlocmap = GlobalAlloc(GMEM_FIXED, g);
-	locmap = (unsigned char *)hlocmap;
-	for (int i = 0; i < g; i++)
-		*(locmap + i) = 0;
-
-	memcpy(locmap, lphismap, g);
-
-	testbuf_len = 0;
-
-	testbuf = (unsigned char *)checkedmalloc(TESTBUF_SIZE);                        //压缩后输出
-
-	jbg85_enc_init(&s, lmwidth, ImageHeight, testbuf_writel, NULL);                //初始化
-	jbg85_enc_options(&s, JBG_TPBON, 0, -1);                                       //参数传递
-
-	for (int row = 0; row < ImageHeight; row++)
-		jbg85_enc_lineout(&s, locmap + row * lmwidth/8, locmap + (row - 1)*lmwidth/8, locmap + (row - 2)*lmwidth/8);    //参数：一行，前一行，前前一行
-
-	buflen = testbuf_len;
-	Blow = buflen;
-	/*解压*/
-	struct jbg85_dec_state d;
-	unsigned char *image, *buffer;
-	size_t plane_size, buffer_len;
-	size_t cnt;
-
-	plane_size = ImageHeight * lmwidth;
-	int result;
-
-	//buffer_len = ((lmwidth >> 3) + !!(lmwidth & 7)) * 3;            //缓冲区长度
-	buffer_len = plane_size;
-	buffer = (unsigned char *)checkedmalloc(buffer_len);           //缓冲区分配内存
-	image = (unsigned char *)checkedmalloc(plane_size);            //输出图像分配内存
-	jbg85_dec_init(&d, buffer, buffer_len, line_out, image);
-	result = jbg85_dec_in(&d, testbuf, buflen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度testbuf_len
-
-
-	//赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-	
-	
-	for (int i = 0; i < GrayHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-	
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			int i = column / 8;                                                 //求location map的宽
-			int j = 7 + i * 8 - column;                                             //计算右移对应的位数，
-			tmp = *(image + row * lmwidth / 8 + i);                               //读取对应的预处理location map数据，一个
-			int m = (tmp >> j) & 1;                                               //m为读取到的location map的位数据，为0或1
-			if (m == 1)
-			{
-				if (*(lp + row * ImageWidth + column) < 129)
-					*(lpwmimage + GrayHead + row * ImageWidth + column) = *(lp + row * ImageWidth + column);
-			}
-			else if (m == 0)
-			{
-				if (*(lp + row * ImageWidth + column) > 128)
-					*(lpwmimage + GrayHead + row * ImageWidth + column) = *(lp + row * ImageWidth + column);
-			}
-			else
-				*(lpwmimage + GrayHead + row * ImageWidth + column) = 0;
-		}
-
-}
-
-//严重失真
-void CDeprejbgDoc::Yenhanced()
-{
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hYchannel)
-	{
-		GlobalFree(hYchannel);
-		hYchannel = NULL;
-	}
-	hYchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Ychannel = (unsigned char*)hYchannel;
-
-	if (hUchannel)
-	{
-		GlobalFree(hUchannel);
-		hUchannel = NULL;
-	}
-	hUchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Uchannel = (unsigned char*)hUchannel;
-
-	if (hVchannel)
-	{
-		GlobalFree(hVchannel);
-		hVchannel = NULL;
-	}
-	hVchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Vchannel = (unsigned char*)hVchannel;
-
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Ychannel + GrayHead + z) = *(lporigimage + j) * 0.299 + *(lporigimage + j + 1) * 0.587 + *(lporigimage + j + 2) * 0.114;
-		*(Uchannel + GrayHead + z) = *(lporigimage + j) * -0.169 + *(lporigimage + j + 1) * -0.331 + *(lporigimage + j + 2) * 0.5 + 128;
-		*(Vchannel + GrayHead + z) = *(lporigimage + j) * 0.5 + *(lporigimage + j + 1) * -0.419 + *(lporigimage + j + 2) * -0.081 + 128;
-		z++;
-	}
-
-	//增强Y通道
-	lporigimage = Ychannel;
-	deori(1);
-	memcpy(Ychannel, lpwmimage, m_ImageSize);
-
-	//增强后初始化
-	if (hGchannelEnhanced)
-	{
-		GlobalFree(hGchannelEnhanced);
-		hGchannelEnhanced = NULL;
-	}
-	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
-
-	if (hRchannelEnhanced)
-	{
-		GlobalFree(hRchannelEnhanced);
-		hRchannelEnhanced = NULL;
-	}
-	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
-
-	if (hBchannelEnhanced)
-	{
-		GlobalFree(hBchannelEnhanced);
-		hBchannelEnhanced = NULL;
-	}
-	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
-
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		*(RchannelEnhanced + i) = *(Ychannel + i) + (*(Vchannel + i) - 128) * 1.13983;
-		*(GchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * -0.39465 + (*(Vchannel + i) - 128) * -0.5806;
-		*(BchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * 2.03211;
-	}
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(RchannelEnhanced + z);
-		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
-		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
-		z++;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-}
-
-void CDeprejbgDoc::Yrecovery()
-{
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hYchannel)
-	{
-		GlobalFree(hYchannel);
-		hYchannel = NULL;
-	}
-	hYchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Ychannel = (unsigned char*)hYchannel;
-
-	if (hUchannel)
-	{
-		GlobalFree(hUchannel);
-		hUchannel = NULL;
-	}
-	hUchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Uchannel = (unsigned char*)hUchannel;
-
-	if (hVchannel)
-	{
-		GlobalFree(hVchannel);
-		hVchannel = NULL;
-	}
-	hVchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Vchannel = (unsigned char*)hVchannel;
-
-	//将彩色图像RGB通道的值转为YUV格式，并分别赋值到灰度图格式
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Ychannel + GrayHead + z) = *(lpwmimage + j) * 0.299 + *(lpwmimage + j + 1) * 0.587 + *(lpwmimage + j + 2) * 0.114;
-		*(Uchannel + GrayHead + z) = *(lpwmimage + j) * -0.169 + *(lpwmimage + j + 1) * -0.331 + *(lpwmimage + j + 2) * 0.5 + 128;
-		*(Vchannel + GrayHead + z) = *(lpwmimage + j) * 0.5 + *(lpwmimage + j + 1) * -0.419 + *(lpwmimage + j + 2) * -0.081 + 128;
-		z++;
-	}
-
-	//Y通道还原
-	memcpy(lppreimage, Ychannel, m_ImageSize);
-	depre();
-	memcpy(Ychannel, lpwmimage, m_ImageSize);
-
-	//转为RGB
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		*(RchannelEnhanced + i) = *(Ychannel + i) + (*(Vchannel + i) - 128) * 1.13983;
-		*(GchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * -0.39465 + (*(Vchannel + i) - 128) * -0.5806;
-		*(BchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * 2.03211;
-	}
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(RchannelEnhanced + z);
-		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
-		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
-		z++;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-}
-
-//存在除数为零，溢出等问题，论文中没有指出如何处理
-void CDeprejbgDoc::SmallestRangeEnhanced()
-{
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	int MaxR = 0, MaxG = 0, MaxB = 0;
-	int MinR = 255, MinG = 255, MinB = 255;
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lporigimage + j);
-		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lporigimage + j + 2);
-		z++;
-		if (*(lporigimage + j) > MaxR)
-		{
-			MaxR = *(lporigimage + j);
-		}
-		else if (*(lporigimage + j) < MinR)
-		{
-			MinR = *(lporigimage + j);
-		}
-		if (*(lporigimage + j + 1) > MaxG)
-		{
-			MaxG = *(lporigimage + j + 1);
-		}
-		else if (*(lporigimage + j + 1) < MinG)
-		{
-			MinG = *(lporigimage + j + 1);
-		}
-		if (*(lporigimage + j + 2) > MaxB)
-		{
-			MaxB = *(lporigimage + j + 2);
-		}
-		else if (*(lporigimage + j + 2) < MinB)
-		{
-			MinB = *(lporigimage + j + 2);
-		}
-	}
-
-	//计算各通道的范围并找最小的
-	int Rrange, Grange, Brange, Minrange;
-	Rrange = MaxR - MinR;
-	Grange = MaxG - MinG;
-	Brange = MaxB - MinB;
-	Minrange = Rrange;
-	if (Rrange < Grange)
-	{
-		Minrange = Rrange;
-	}
-	if (Brange < Minrange)
-	{
-		Minrange = Brange;
-	}
-
-	//增强后初始化
-	if (hGchannelEnhanced)
-	{
-		GlobalFree(hGchannelEnhanced);
-		hGchannelEnhanced = NULL;
-	}
-	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
-
-	if (hRchannelEnhanced)
-	{
-		GlobalFree(hRchannelEnhanced);
-		hRchannelEnhanced = NULL;
-	}
-	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
-
-	if (hBchannelEnhanced)
-	{
-		GlobalFree(hBchannelEnhanced);
-		hBchannelEnhanced = NULL;
-	}
-	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
-
-	//选择范围最小的进行增强
-	int pairs = 50;
-	if (Minrange == Rrange)
-	{
-		lporigimage = Rchannel;
-		deori(pairs);
-		memcpy(RchannelEnhanced, lpwmimage, m_ImageSize);
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(GchannelEnhanced + i) = *(RchannelEnhanced + i) * (*(Gchannel + i)) / (*(Rchannel + i));
-			*(BchannelEnhanced + i) = *(RchannelEnhanced + i) * (*(Bchannel + i)) / (*(Rchannel + i));
-		}
-	}
-	else if (Minrange == Grange)
-	{
-		lporigimage = Gchannel;
-		deori(pairs);
-		memcpy(GchannelEnhanced, lpwmimage, m_ImageSize);
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(RchannelEnhanced + i) = *(GchannelEnhanced + i) * (*(Rchannel + i)) / (*(Gchannel + i));
-			*(BchannelEnhanced + i) = *(GchannelEnhanced + i) * (*(Bchannel + i)) / (*(Gchannel + i));
-		}
-	}
-	else
-	{
-		lporigimage = Bchannel;
-		deori(pairs);
-		memcpy(BchannelEnhanced, lpwmimage, m_ImageSize);
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			*(RchannelEnhanced + i) = *(BchannelEnhanced + i) * (*(Rchannel + i)) / (*(Bchannel + i));
-			*(GchannelEnhanced + i) = *(BchannelEnhanced + i) * (*(Gchannel + i)) / (*(Bchannel + i));
-		}
-	}
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(RchannelEnhanced + z);
-		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
-		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
-		z++;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-}
-
-void CDeprejbgDoc::GrayReference()
-{
-	//增强对数
-	int pairs = 50;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	if (hGrayscale)
-	{
-		GlobalFree(hGrayscale);
-		hGrayscale = NULL;
-	}
-	hGrayscale = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Grayscale = (unsigned char*)hGrayscale;
-
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lporigimage + j);
-		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lporigimage + j + 2);
-		*(Grayscale + GrayHead + z) = *(lporigimage + j)*0.299 + *(lporigimage + j + 1)*0.587 + *(lporigimage + j + 2)*0.114;     //彩色转为灰度
-		z++;
-	}
-
-	//增强灰度图以作参考
-	lporigimage = Grayscale;
-	deori(pairs);
-	if (hGrayscaleEnhanced)
-	{
-		GlobalFree(hGrayscaleEnhanced);
-		hGrayscaleEnhanced = NULL;
-	}
-	hGrayscaleEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GrayscaleEnhanced = (unsigned char*)hGrayscaleEnhanced;
-	memcpy(GrayscaleEnhanced, lpwmimage, m_ImageSize);
-
-	//增强R通道
-	lporigimage = Rchannel;
-	deori(pairs);
-	if (hRchannelEnhanced)
-	{
-		GlobalFree(hRchannelEnhanced);
-		hRchannelEnhanced = NULL;
-	}
-	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
-	memcpy(RchannelEnhanced, lpwmimage, m_ImageSize);
-
-	//增强B通道
-	lporigimage = Bchannel;
-	deori(pairs);
-	if (hBchannelEnhanced)
-	{
-		GlobalFree(hBchannelEnhanced);
-		hBchannelEnhanced = NULL;
-	}
-	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
-	memcpy(BchannelEnhanced, lpwmimage, m_ImageSize);
-
-	//G通道写入
-	if (hGchannelEnhanced)
-	{
-		GlobalFree(hGchannelEnhanced);
-		hGchannelEnhanced = NULL;
-	}
-	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
-
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		*(GchannelEnhanced + i) = (*(GrayscaleEnhanced + i) - *(RchannelEnhanced + i)*0.299 - *(BchannelEnhanced + i)*0.114) / 0.587;
-	}
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	//写入像素值
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(RchannelEnhanced + z);
-		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
-		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
-		z++;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-}
-
-void CDeprejbgDoc::threePreProcess()
-{
-	//预处理对数
-	int pairs = 20;
-
-	//无意义
-	long pldUseless;
-	int metInThreePro = pairs - 1;
-	long payload;
-	long g=0, el=0;
-	long testbuf_lenR, testbuf_lenG, testbuf_lenB;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	/*记录位置图新增定义*/
-	struct jbg85_enc_state s;
-	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
-	long locationMapSize;              //locationmap大小
-	unsigned char location8;           //一个字节，记录8个位置
-
-	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
-	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
-
-	//初始化
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	if (hRchannelPreprocessed)
-	{
-		GlobalFree(hRchannelPreprocessed);
-		hRchannelPreprocessed = NULL;
-	}
-	hRchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelPreprocessed = (unsigned char*)hRchannelPreprocessed;
-
-	if (hGchannelPreprocessed)
-	{
-		GlobalFree(hGchannelPreprocessed);
-		hGchannelPreprocessed = NULL;
-	}
-	hGchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelPreprocessed = (unsigned char*)hGchannelPreprocessed;
-
-	if (hBchannelPreprocessed)
-	{
-		GlobalFree(hBchannelPreprocessed);
-		hBchannelPreprocessed = NULL;
-	}
-	hBchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelPreprocessed = (unsigned char*)hBchannelPreprocessed;
-
-	//各通道赋值
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
-		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lporigimage + j);
-		z++;
-	}
-
-	//排序
-	//deoriRGBPre();
-
-	/*三个通道分别做预处理,并记录下产生的位置信息*/
-	onlyPreProcess = true;
-
-	lporigimage = Rchannel;
-	//lporigimage = lpMaximage;
-	deori(pairs);
-	memcpy(RchannelPreprocessed, lpwmimage, m_ImageSize);
-	//lpprehist、locmap、zn、testbuf_len的记录
-	exctR = zn;
-	testbuf_lenR = testbuf_len;
-	if (hprehistRchannel)
-	{
-		GlobalFree(hprehistRchannel);
-		hprehistRchannel = NULL;
-	}
-	hprehistRchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	lpprehistRchannel = (unsigned char *)hprehistRchannel;
-	memcpy(lpprehistRchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	if (isMerge == true) 
-	{
-		if (hlocmapRchannel)
-		{
-			GlobalFree(hlocmapRchannel);
-			hlocmapRchannel = NULL;
-		}
-		hlocmapRchannel = GlobalAlloc(GMEM_FIXED, lml);
-		locmapRchannel = (unsigned char *)hlocmapRchannel;
-		memcpy(locmapRchannel, locmap, lml);
-	}
-
-	lporigimage = Gchannel;
-	//lporigimage = lpMediaimage;
-	deori(pairs);
-	memcpy(GchannelPreprocessed, lpwmimage, m_ImageSize);
-	//lpprehist、locmap、zn的记录
-	exctG = zn;
-	testbuf_lenG = testbuf_len;
-	if (hprehistGchannel)
-	{
-		GlobalFree(hprehistGchannel);
-		hprehistGchannel = NULL;
-	}
-	hprehistGchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	lpprehistGchannel = (unsigned char *)hprehistGchannel;
-	memcpy(lpprehistGchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	if (isMerge == true)
-	{
-		if (hlocmapGchannel)
-		{
-			GlobalFree(hlocmapGchannel);
-			hlocmapGchannel = NULL;
-		}
-		hlocmapGchannel = GlobalAlloc(GMEM_FIXED, lml);
-		locmapGchannel = (unsigned char *)hlocmapGchannel;
-		memcpy(locmapGchannel, locmap, lml);
-	}
-
-	lporigimage = Bchannel;
-	//lporigimage = lpMinimage;
-	deori(pairs);
-	memcpy(BchannelPreprocessed, lpwmimage, m_ImageSize);
-	//lpprehist、locmap的记录
-	exctB = zn;
-	testbuf_lenB = testbuf_len;
-	if (hprehistBchannel)
-	{
-		GlobalFree(hprehistBchannel);
-		hprehistBchannel = NULL;
-	}
-	hprehistBchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	lpprehistBchannel = (unsigned char *)hprehistBchannel;
-	memcpy(lpprehistBchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	if (isMerge == true)
-	{
-		if (hlocmapBchannel)
-		{
-			GlobalFree(hlocmapBchannel);
-			hlocmapBchannel = NULL;
-		}
-		hlocmapBchannel = GlobalAlloc(GMEM_FIXED, lml);
-		locmapBchannel = (unsigned char *)hlocmapBchannel;
-		memcpy(locmapBchannel, locmap, lml);
-	}
-	onlyPreProcess = false;
-
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	//int max;
-	//int t;
-	int k = 0;
-	int j = GrayHead;
-	
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-		*(lpwmimage + i + 2) = *(RchannelPreprocessed + j);
-		*(lpwmimage + i + 1) = *(GchannelPreprocessed + j);
-		*(lpwmimage + i) = *(BchannelPreprocessed + j);
-		j++;
-		k++;
-	}
-	
-	/*
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-
-		*(lpwmimage + i + *(lpMreimage + k)) = *(RchannelPreprocessed + j);
-		*(lpwmimage + i + *(lpMereimage + k)) = *(GchannelPreprocessed + j);
-		*(lpwmimage + i + *(lpMireimage + k)) = *(BchannelPreprocessed + j);
-
-		j++;
-		k++;
-	}
-	*/
-
-	long exct = exctR + exctG + exctB;
-
-	threePreProcessEnhanced(metInThreePro, testbuf_lenR);
-
-}
-
-void CDeprejbgDoc::threePreProcessEnhanced(int met, long testbuf_lenInPre)
-{
-	long el = 0, g = 0;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//排序
-	if (hpreimage)
-	{
-		GlobalFree(hpreimage);
-		hpreimage = NULL;
-	}
-	hpreimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lppreimage = (unsigned char *)hpreimage;
-	memcpy(lppreimage, lporigimage, m_ColorImageSize);
-	memcpy(lporigimage, lpwmimage, m_ColorImageSize);
-	deoriRGBPre(lporigimage);
-	memcpy(lporigimage, lppreimage, m_ColorImageSize);
-
-	if (hMaximageTemporary)
-	{
-		GlobalFree(hMaximageTemporary);
-		hMaximageTemporary = NULL;
-	}
-	hMaximageTemporary = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMaximageTemporary = (unsigned char*)hMaximageTemporary;
-
-	memcpy(lpMaximageTemporary, lpMaximage, m_ImageSize);
-
-	if (hMaxEnimage)
-	{
-		GlobalFree(hMaxEnimage);
-		hMaxEnimage = NULL;
-	}
-	hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMaxEnimage = (unsigned char*)hMaxEnimage;
-	memcpy(lpMaxEnimage, lpMaximage, m_ImageSize);
-	for (int m = 0; m < met + 1; m++)
-	{
-		el = derem(lpMaximageTemporary, lpMaxEnimage, m, met, testbuf_lenInPre, exctR, locmapRchannel, lpprehistRchannel);                  //数据嵌入
-		g = g + el;
-		memcpy(lpMaxEnimage, lpMaximageTemporary, m_ImageSize);
-	}
-
-	//处理Min通道
-	if (hMinEnimage)
-	{
-		GlobalFree(hMinEnimage);
-		hMinEnimage = NULL;
-	}
-	hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMinEnimage = (unsigned char*)hMinEnimage;
-	int z = 0;
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		double c2 = *(lpC2image + z);
-		double c = *(lpCimage + z);
-		//double min = *(lpMinimage + i);
-		double max = *(lpMaxEnimage + i);
-		//double median = *(lpMediaimage + i);
-		if (max != 0)
-			*(lpMinEnimage + i) = max * c2 + 0.5;
-		else
-			*(lpMinEnimage + i) = 0;
-		z++;
-	}
-
-	//处理Media通道
-	if (hMedianEnimage)
-	{
-		GlobalFree(hMedianEnimage);
-		hMedianEnimage = NULL;
-	}
-	hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMedianEnimage = (unsigned char*)hMedianEnimage;
-	z = 0;
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		double c = *(lpCimage + z);
-		double c2 = *(lpC2image + z);
-		double max = *(lpMaxEnimage + i);
-		double min = *(lpMinEnimage + i);
-		//double median = *(lpMediaimage + i);
-		if (max != min)
-			*(lpMedianEnimage + i) = max * (c - c2 * c + c2) + 0.5;
-		else
-			*(lpMedianEnimage + i) = max;
-		z++;
-	}
-
-	if (hlocationMapColor)
-	{
-		GlobalFree(hlocationMapColor);
-		hlocationMapColor = NULL;
-	}
-	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	locationMapColor = (unsigned char*)hlocationMapColor;
-
-	int maplen=0;
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		double c, c2;
-		double minRe, medianRe, maxRe;
-		unsigned char maxEn, minEn, medianEn, maxReChar, minReChar, medianReChar, minOri, medianOri,maxOri;
-
-		maxEn = *(lpMaxEnimage + GrayHead + i);
-		medianEn = *(lpMedianEnimage + GrayHead + i);
-		minEn = *(lpMinEnimage + GrayHead + i);
-
-		c = ((double)(medianEn - minEn)) / ((double)(maxEn - minEn));
-		c2 = ((double)minEn) / ((double)maxEn);
-
-		maxReChar = *(lpMaximage + GrayHead + i);
-		maxRe = (double)maxReChar;
-		if (maxReChar != 0)
-			minRe = maxRe * c2 + 0.5;
-		else
-			minRe = 0;
-		minReChar = (unsigned char)minRe;
-		if (maxReChar != minReChar)
-			medianRe = maxRe * (c - c2 * c + c2) + 0.5;
-		else
-			medianRe = maxRe;
-		medianReChar = (unsigned char)medianRe;
-
-		minOri = *(lpMinimage + GrayHead + i);
-		medianOri = *(lpMediaimage + GrayHead + i);
-		if (minOri != minReChar || medianOri != medianReChar)
-		{
-			*(locationMapColor + i) = 1;
-			maplen++;
-		}
-		else
-		{
-			*(locationMapColor + i) = 0;
-		}
-	}
-
-	if (hMinPredictOri)
-	{
-		GlobalFree(hMinPredictOri);
-		hMinPredictOri = NULL;
-	}
-	hMinPredictOri = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MinPredictOri = (unsigned char*)hMinPredictOri;
-
-	if (hMinPredictEn)
-	{
-		GlobalFree(hMinPredictEn);
-		hMinPredictEn = NULL;
-	}
-	hMinPredictEn = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MinPredictEn = (unsigned char*)hMinPredictEn;
-
-	if (hMedianPredictOri)
-	{
-		GlobalFree(hMedianPredictOri);
-		hMedianPredictOri = NULL;
-	}
-	hMedianPredictOri = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MedianPredictOri = (unsigned char*)hMedianPredictOri;
-
-	if (hMedianPredictEn)
-	{
-		GlobalFree(hMedianPredictEn);
-		hMedianPredictEn = NULL;
-	}
-	hMedianPredictEn = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	MedianPredictEn = (unsigned char*)hMedianPredictEn;
-
-	int maxMin = 0, maxMedian = 0;
-	for (int row = 0; row < ImageHeight; row++)
-		for (int column = 0; column < ImageWidth; column++)
-		{
-			int minNeighborOri[3], minNeighborEn[3], medianNeighborOri[3], medianNeighborEn[3]; 
-			int minMedOri, minMedEn, medianMedOri, medianMedEn;
-			if (*(locationMapColor + row * ImageWidth + column) == 0)
-			{
-				*(MinPredictOri + row * ImageWidth + column + GrayHead) = *(lpMinimage + row * ImageWidth + column + GrayHead);
-				*(MinPredictEn + row * ImageWidth + column + GrayHead) = *(lpMinEnimage + row * ImageWidth + column + GrayHead);
-				*(MedianPredictOri + row * ImageWidth + column + GrayHead) = *(lpMediaimage + row * ImageWidth + column + GrayHead);
-				*(MedianPredictEn + row * ImageWidth + column + GrayHead) = *(lpMedianEnimage + row * ImageWidth + column + GrayHead);
-			}
-			else if (*(locationMapColor + row * ImageWidth + column) == 1)
-			{
-				if (row == 0 && column == 0)
-				{
-					*(MinPredictOri + row * ImageWidth + column + GrayHead) = met+1;
-					*(MinPredictEn + row * ImageWidth + column + GrayHead) = *(lpMinEnimage + row * ImageWidth + column + GrayHead);
-					*(MedianPredictOri + row * ImageWidth + column + GrayHead) = met + 1;
-					*(MedianPredictEn + row * ImageWidth + column + GrayHead) = *(lpMedianEnimage + row * ImageWidth + column + GrayHead);
-					continue;
-				}
-				int num = 0;
-				for (int i = row - 1; i <= row; i++)
-					for (int j = column - 1; j <= column; j++)
-					{
-						if (num < 3)
-						{
-							if (j < 0 || j >= ImageWidth || i < 0 || i >= ImageHeight)
-							{
-								num++;
-								continue;
-							}
-							minNeighborOri[num] = *(lpMinimage + i * ImageWidth + j + GrayHead);
-							minNeighborEn[num] = *(lpMinEnimage + i * ImageWidth + j + GrayHead);
-							medianNeighborOri[num] = *(lpMediaimage + i * ImageWidth + j + GrayHead);
-							medianNeighborEn[num] = *(lpMedianEnimage + i * ImageWidth + j + GrayHead);
-							num++;
-						}
-
-					}
-
-				minMedOri = MED(minNeighborOri[0], minNeighborOri[1], minNeighborOri[2]);
-				minMedEn = MED(minNeighborEn[0], minNeighborEn[1], minNeighborEn[2]);
-				medianMedOri = MED(medianNeighborOri[0], medianNeighborOri[1], medianNeighborOri[2]);
-				medianMedEn = MED(medianNeighborEn[0], medianNeighborEn[1], medianNeighborEn[2]);
-
-				*(MinPredictOri + row * ImageWidth + column + GrayHead) = minMedOri;
-				*(MinPredictEn + row * ImageWidth + column + GrayHead) = minMedEn;
-				*(MedianPredictOri + row * ImageWidth + column + GrayHead) = medianMedOri;
-				*(MedianPredictEn + row * ImageWidth + column + GrayHead) = medianMedEn;
-
-				int referOri1Val = *(lpMinimage + row * ImageWidth + column + GrayHead);
-				int referOri2Val = *(lpMediaimage + row * ImageWidth + column + GrayHead);
-
-				if ((minMedOri - referOri1Val) > 100 || (medianMedOri - referOri2Val) > 100)
-				{
-					int correlation1 = minMedEn + (minMedOri - referOri1Val);
-					int correlation2 = medianMedEn + (medianMedOri - referOri2Val);
-				}
-				if ((minMedOri - referOri1Val) > maxMin)		maxMin = minMedOri - referOri1Val;
-				if ((medianMedOri - referOri2Val) > maxMedian)		maxMedian = medianMedOri - referOri2Val;
-			}
-		}
-
-	
-
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	int k = 0;
-	int j = GrayHead;
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-
-		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
-		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
-		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
-
-		j++;
-		k++;
-	}
-
-	z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
-		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lporigimage + j);
-		z++;
-	}
-
-}
-
-void CDeprejbgDoc::threePreProcessRecover()
-{
-	int pairs = 1;
-	int metInThreePro = pairs - 1;
-	unsigned char *wpR, *wpG, *wpB;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	if (hRchannelPreprocessed)
-	{
-		GlobalFree(hRchannelPreprocessed);
-		hRchannelPreprocessed = NULL;
-	}
-	hRchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelPreprocessed = (unsigned char*)hRchannelPreprocessed;
-
-	if (hGchannelPreprocessed)
-	{
-		GlobalFree(hGchannelPreprocessed);
-		hGchannelPreprocessed = NULL;
-	}
-	hGchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelPreprocessed = (unsigned char*)hGchannelPreprocessed;
-
-	if (hBchannelPreprocessed)
-	{
-		GlobalFree(hBchannelPreprocessed);
-		hBchannelPreprocessed = NULL;
-	}
-	hBchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelPreprocessed = (unsigned char*)hBchannelPreprocessed;
-
-	/*RGB通道分别赋值*/
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(RchannelPreprocessed + GrayHead + z) = *(lpwmimage + j + 2);
-		*(GchannelPreprocessed + GrayHead + z) = *(lpwmimage + j + 1);
-		*(BchannelPreprocessed + GrayHead + z) = *(lpwmimage + j);
-		z++;
-	}
-
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	wpR = RchannelPreprocessed + GrayHead;
-	preProcessRecover(lpprehistRchannel, locmapRchannel, metInThreePro, exctR, wpR);
-	memcpy(Rchannel, RchannelPreprocessed, m_ImageSize);
-
-	wpG = GchannelPreprocessed + GrayHead;
-	preProcessRecover(lpprehistGchannel, locmapGchannel, metInThreePro, exctG, wpG);
-	memcpy(Gchannel, GchannelPreprocessed, m_ImageSize);
-
-	wpB = BchannelPreprocessed + GrayHead;
-	preProcessRecover(lpprehistBchannel, locmapBchannel, metInThreePro, exctB, wpB);
-	memcpy(Bchannel, BchannelPreprocessed, m_ImageSize);
-
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);   //彩色图像大小
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o + 2) = *(Rchannel + z);
-		*(lpwmimage + o + 1) = *(Gchannel + z);
-		*(lpwmimage + o) = *(Bchannel + z);
-		z++;
-	}
-
-
-}
-
-void CDeprejbgDoc::reservedOnePairs()
-{
-	//预处理对数，即预留的pairs数
-	int pairs = 1;
-
-	//无意义
-	long pldUseless;
-	int metInThreePro = pairs - 1;
-	long payload;
-	long g = 0, el = 0;
-	long testbuf_lenR, testbuf_lenG, testbuf_lenB;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hRchannel)
-	{
-		GlobalFree(hRchannel);
-		hRchannel = NULL;
-	}
-	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Rchannel = (unsigned char*)hRchannel;
-
-	if (hGchannel)
-	{
-		GlobalFree(hGchannel);
-		hGchannel = NULL;
-	}
-	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Gchannel = (unsigned char*)hGchannel;
-
-	if (hBchannel)
-	{
-		GlobalFree(hBchannel);
-		hBchannel = NULL;
-	}
-	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Bchannel = (unsigned char*)hBchannel;
-
-	if (hRchannelPreprocessed)
-	{
-		GlobalFree(hRchannelPreprocessed);
-		hRchannelPreprocessed = NULL;
-	}
-	hRchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	RchannelPreprocessed = (unsigned char*)hRchannelPreprocessed;
-
-	if (hGchannelPreprocessed)
-	{
-		GlobalFree(hGchannelPreprocessed);
-		hGchannelPreprocessed = NULL;
-	}
-	hGchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	GchannelPreprocessed = (unsigned char*)hGchannelPreprocessed;
-
-	if (hBchannelPreprocessed)
-	{
-		GlobalFree(hBchannelPreprocessed);
-		hBchannelPreprocessed = NULL;
-	}
-	hBchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	BchannelPreprocessed = (unsigned char*)hBchannelPreprocessed;
-
-	//各通道赋值
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
-		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
-		*(Bchannel + GrayHead + z) = *(lporigimage + j);
-		z++;
-	}
-
-	/*三个通道分别做预处理,并记录下产生的位置信息*/
-	onlyPreProcess = true;
-
-	lporigimage = Rchannel;
-	//lporigimage = lpMaximage;
-	deori(pairs);
-	memcpy(RchannelPreprocessed, lpwmimage, m_ImageSize);
-	//lpprehist、locmap、zn、testbuf_len的记录
-	exctR = zn;
-	testbuf_lenR = testbuf_len;
-	if (hprehistRchannel)
-	{
-		GlobalFree(hprehistRchannel);
-		hprehistRchannel = NULL;
-	}
-	hprehistRchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	lpprehistRchannel = (unsigned char *)hprehistRchannel;
-	memcpy(lpprehistRchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	if (isMerge == true)
-	{
-		if (hlocmapRchannel)
-		{
-			GlobalFree(hlocmapRchannel);
-			hlocmapRchannel = NULL;
-		}
-		hlocmapRchannel = GlobalAlloc(GMEM_FIXED, lml);
-		locmapRchannel = (unsigned char *)hlocmapRchannel;
-		memcpy(locmapRchannel, locmap, lml);
-	}
-
-	lporigimage = Gchannel;
-	//lporigimage = lpMediaimage;
-	deori(pairs);
-	memcpy(GchannelPreprocessed, lpwmimage, m_ImageSize);
-	//lpprehist、locmap、zn的记录
-	exctG = zn;
-	testbuf_lenG = testbuf_len;
-	if (hprehistGchannel)
-	{
-		GlobalFree(hprehistGchannel);
-		hprehistGchannel = NULL;
-	}
-	hprehistGchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	lpprehistGchannel = (unsigned char *)hprehistGchannel;
-	memcpy(lpprehistGchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	if (isMerge == true)
-	{
-		if (hlocmapGchannel)
-		{
-			GlobalFree(hlocmapGchannel);
-			hlocmapGchannel = NULL;
-		}
-		hlocmapGchannel = GlobalAlloc(GMEM_FIXED, lml);
-		locmapGchannel = (unsigned char *)hlocmapGchannel;
-		memcpy(locmapGchannel, locmap, lml);
-	}
-
-	lporigimage = Bchannel;
-	//lporigimage = lpMinimage;
-	deori(pairs);
-	memcpy(BchannelPreprocessed, lpwmimage, m_ImageSize);
-	//lpprehist、locmap的记录
-	exctB = zn;
-	testbuf_lenB = testbuf_len;
-	if (hprehistBchannel)
-	{
-		GlobalFree(hprehistBchannel);
-		hprehistBchannel = NULL;
-	}
-	hprehistBchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	lpprehistBchannel = (unsigned char *)hprehistBchannel;
-	memcpy(lpprehistBchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
-	if (isMerge == true)
-	{
-		if (hlocmapBchannel)
-		{
-			GlobalFree(hlocmapBchannel);
-			hlocmapBchannel = NULL;
-		}
-		hlocmapBchannel = GlobalAlloc(GMEM_FIXED, lml);
-		locmapBchannel = (unsigned char *)hlocmapBchannel;
-		memcpy(locmapBchannel, locmap, lml);
-	}
-	onlyPreProcess = false;
-	
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	//int max;
-	//int t;
-	int k = 0;
-	int j = GrayHead;
-
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-		*(lpwmimage + i + 2) = *(RchannelPreprocessed + j);
-		*(lpwmimage + i + 1) = *(GchannelPreprocessed + j);
-		*(lpwmimage + i) = *(BchannelPreprocessed + j);
-		j++;
-		k++;
-	}
-
-	reservedOnePairsEnMax();
-}
-
-void CDeprejbgDoc::reservedOnePairsEnMax()
-{
-	long el = 0, g = 0;
-	          
-	int pairsEn = 30;
-	int pairsPre = pairsEn + 1;				//预处理pairs数要比增强pairs数大1
-	int metInMaxPre = pairsEn - 1;
-
-	long testbuf_lenMax;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//排序
-	deoriRGBPre(lpwmimage);
-	
-
-	if (hmaxPreprocessed)
-	{
-		GlobalFree(hmaxPreprocessed);
-		hmaxPreprocessed = NULL;
-	}
-	hmaxPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	maxPreprocessed = (unsigned char*)hmaxPreprocessed;
-
-	/*max通道做预处理,并记录下产生的位置信息*/
-	onlyPreProcess = true;
-
-	lporigimage = lpMaximage;
-	deori(pairsPre);
-	memcpy(maxPreprocessed, lpwmimage, m_ImageSize);
-	//lpprehist、locmap、zn、testbuf_len的记录
-	exctMax = zn;
-	testbuf_lenMax = testbuf_len;
-	if (hprehistMaxChannel)
-	{
-		GlobalFree(hprehistMaxChannel);
-		hprehistMaxChannel = NULL;
-	}
-	hprehistMaxChannel = GlobalAlloc(GMEM_FIXED, 2 * (metInMaxPre + 2) * sizeof(unsigned char));
-	lpprehistMaxChannel = (unsigned char *)hprehistMaxChannel;
-	memcpy(lpprehistMaxChannel, lpprehist, 2 * (metInMaxPre + 2) * sizeof(unsigned char));
-	if (isMerge == true)
-	{
-		if (hlocmapMaxChannel)
-		{
-			GlobalFree(hlocmapMaxChannel);
-			hlocmapMaxChannel = NULL;
-		}
-		hlocmapMaxChannel = GlobalAlloc(GMEM_FIXED, lml);
-		locmapMaxChannel = (unsigned char *)hlocmapMaxChannel;
-		memcpy(locmapMaxChannel, locmap, lml);
-	}
-	onlyPreProcess = false;
-	
-	//处理MAX通道
-	if (hMaxEnimage)
-	{
-		GlobalFree(hMaxEnimage);
-		hMaxEnimage = NULL;
-	}
-	hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMaxEnimage = (unsigned char*)hMaxEnimage;
-	memcpy(lpMaxEnimage, lpMaximage, m_ImageSize);
-
-	if (hMaximageTemporary)
-	{
-		GlobalFree(hMaximageTemporary);
-		hMaximageTemporary = NULL;
-	}
-	hMaximageTemporary = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMaximageTemporary = (unsigned char*)hMaximageTemporary;
-
-	memcpy(lpMaximageTemporary, lpMaximage, m_ImageSize);
-
-	for (int m = 0; m < metInMaxPre + 1; m++)
-	{
-		el = derem(lpMaximageTemporary, lpMaxEnimage, m, metInMaxPre, testbuf_lenMax, exctMax, locmapMaxChannel, lpprehistMaxChannel);                  //数据嵌入
-		g = g + el;
-		memcpy(lpMaxEnimage, lpMaximageTemporary, m_ImageSize);
-	}
-
-	//处理Min通道
-	if (hMinEnimage)
-	{
-		GlobalFree(hMinEnimage);
-		hMinEnimage = NULL;
-	}
-	hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMinEnimage = (unsigned char*)hMinEnimage;
-	int z = 0;
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		double c2 = *(lpC2image + z);
-		double c = *(lpCimage + z);
-		//double min = *(lpMinimage + i);
-		double max = *(lpMaxEnimage + i);
-		//double median = *(lpMediaimage + i);
-		if (max != 0)
-			*(lpMinEnimage + i) = max * c2 + 0.5;
-		else
-			*(lpMinEnimage + i) = 0;
-		z++;
-	}
-
-	//处理Media通道
-	if (hMedianEnimage)
-	{
-		GlobalFree(hMedianEnimage);
-		hMedianEnimage = NULL;
-	}
-	hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMedianEnimage = (unsigned char*)hMedianEnimage;
-	z = 0;
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		double c = *(lpCimage + z);
-		double c2 = *(lpC2image + z);
-		double max = *(lpMaxEnimage + i);
-		double min = *(lpMinEnimage + i);
-		//double median = *(lpMediaimage + i);
-		if (max != min)
-			*(lpMedianEnimage + i) = max * (c - c2 * c + c2) + 0.5;
-		else
-			*(lpMedianEnimage + i) = max;
-		z++;
-	}
-
-	if (hlocationMapColor)
-	{
-		GlobalFree(hlocationMapColor);
-		hlocationMapColor = NULL;
-	}
-	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	locationMapColor = (unsigned char*)hlocationMapColor;
-
-	if (hlocationMapColor)
-	{
-		GlobalFree(hlocationMapColor);
-		hlocationMapColor = NULL;
-	}
-	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	locationMapColor = (unsigned char*)hlocationMapColor;
-
-	if (hminOverflowMap)
-	{
-		GlobalFree(hminOverflowMap);
-		hminOverflowMap = NULL;
-	}
-	hminOverflowMap = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	minOverflowMap = (unsigned char*)hminOverflowMap;
-
-	if (hmedianOverflowMap)
-	{
-		GlobalFree(hmedianOverflowMap);
-		hmedianOverflowMap = NULL;
-	}
-	hmedianOverflowMap = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	medianOverflowMap = (unsigned char*)hmedianOverflowMap;
-
-	if (hoverflowValue)
-	{
-		GlobalFree(hoverflowValue);
-		hoverflowValue = NULL;
-	}
-	hoverflowValue = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight*sizeof(unsigned char));
-	overflowValue = (unsigned char*)hoverflowValue;
-
-	int overflowNum = 0;
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		double c, c2;
-		double minRe, medianRe, maxRe;
-		unsigned char maxEn, minEn, medianEn, maxReChar, minReChar, medianReChar, minOri, medianOri, maxOri;
-		int minSamePlus, medianSamePlus;               //同加同减后的值
-
-		maxEn = *(lpMaxEnimage + GrayHead + i);
-		medianEn = *(lpMedianEnimage + GrayHead + i);
-		minEn = *(lpMinEnimage + GrayHead + i);
-
-		c = ((double)(medianEn - minEn)) / ((double)(maxEn - minEn));
-		c2 = ((double)minEn) / ((double)maxEn);
-
-		maxReChar = *(lpMaximage + GrayHead + i);
-		maxRe = (double)maxReChar;
-		if (maxReChar != 0)
-			minRe = maxRe * c2 + 0.5;
-		else
-			minRe = 0;
-		minReChar = (unsigned char)minRe;
-		if (maxReChar != minReChar)
-			medianRe = maxRe * (c - c2 * c + c2) + 0.5;
-		else
-			medianRe = maxRe;
-		medianReChar = (unsigned char)medianRe;
-
-		maxOri = *(lpMaximage + GrayHead + i);
-		minOri = *(lpMinimage + GrayHead + i);
-		medianOri = *(lpMediaimage + GrayHead + i);
-		if (minOri != minReChar || medianOri != medianReChar)
-		{
-			minSamePlus = minOri + (maxEn - maxOri);
-			medianSamePlus = medianOri + (maxEn - maxOri);
-			if (minSamePlus >= 0)                  //若不溢出
-			{
-				*(locationMapColor + i) = 1;
-				*(minOverflowMap + i) = 0;
-				*(medianOverflowMap + i) = 0;
-				*(lpMedianEnimage + GrayHead + i) = medianSamePlus;
-				*(lpMinEnimage + GrayHead + i) = minSamePlus;
-			}
-			else
-			{
-				*(locationMapColor + i) = 0;
-				*(minOverflowMap + i) = 1;
-				*(overflowValue + overflowNum) = 0 - minSamePlus;
-				overflowNum++;                 
-				if (medianSamePlus <= 0)                 //若medianSamePlus也溢出
-				{
-					*(overflowValue + overflowNum) = 0 - medianSamePlus;
-					overflowNum++;
-					*(medianOverflowMap + i) = 1;
-				}
-				else
-				{
-					*(medianOverflowMap + i) = 0;
-					*(lpMedianEnimage + GrayHead + i) = medianSamePlus;
-				}
-				*(lpMedianEnimage + GrayHead + i) = medianEn;
-				*(lpMinEnimage + GrayHead + i) = minEn;
-			}
-			
-		}
-		else
-		{
-			*(locationMapColor + i) = 0;
-			*(minOverflowMap + i) = 0;
-			*(medianOverflowMap + i) = 0;
-		}
-	}
-
-	/*
-	for (int i = GrayHead; i < m_ImageSize; i++)          //小于127左移，大于128右移
-	{
-		unsigned char maxEn, medianEn, minEn;
-		maxEn = *(lpMaxEnimage + i);
-		medianEn = *(lpMedianEnimage + i);
-		minEn = *(lpMinEnimage + i);
-		if (maxEn <= 127)
-		{
-			*(lpMaxEnimage + i) = maxEn - 1;
-		}
-		else
-		{
-			*(lpMaxEnimage + i) = maxEn + 1;
-		}
-			
-		if (medianEn <= 127)
-		{
-			*(lpMedianEnimage + i) = medianEn - 1;
-		}
-		else
-		{
-			*(lpMedianEnimage + i) = medianEn + 1;
-		}
-
-		if (minEn <= 127)
-		{
-			*(lpMinEnimage + i) = minEn - 1;
-		}
-		else
-		{
-			*(lpMinEnimage + i) = minEn + 1;
-		}
-	}
-	
-	
-	for (int i = 0; i < ImageWidth*ImageHeight; i++)
-	{
-		if (*(minOverflowMap + i) == 1)
-		{
-			*(lpMinEnimage + GrayHead + i) = 0;
-			if (*(medianOverflowMap + i) == 1)
-			{
-				*(lpMedianEnimage + GrayHead + i) = 255;
-			}
-		}
-	}
-	*/
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	int k = 0;
-	int j = GrayHead;
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-
-		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
-		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
-		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
-
-		j++;
-		k++;
-	}
-}
-
-void CDeprejbgDoc::samePlus()
-{
-	int mm = 50;
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-	deoriRGBPre(lporigimage);
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//处理MAX通道
-	lporigimage = lpMaximage;
-	deori(mm);
-
-	if (hMaxEnimage)
-	{
-		GlobalFree(hMaxEnimage);
-		hMaxEnimage = NULL;
-	}
-	hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMaxEnimage = (unsigned char*)hMaxEnimage;
-	memcpy(lpMaxEnimage, lpwmimage, m_ImageSize);
-
-	if (hMinEnimage)
-	{
-		GlobalFree(hMinEnimage);
-		hMinEnimage = NULL;
-	}
-	hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMinEnimage = (unsigned char*)hMinEnimage;
-
-	if (hMedianEnimage)
-	{
-		GlobalFree(hMedianEnimage);
-		hMedianEnimage = NULL;
-	}
-	hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMedianEnimage = (unsigned char*)hMedianEnimage;
-
-	if (hlocationMapColor)
-	{
-		GlobalFree(hlocationMapColor);
-		hlocationMapColor = NULL;
-	}
-	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth*ImageHeight);
-	locationMapColor = (unsigned char*)hlocationMapColor;
-
-	int z = 0;
-	int len = 0;
-	int minMinSamePlus = 0, minMedianSamePlus = 0;
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		int minSamePlus, medianSamePlus;
-		int minSamePlus2, medianSamePlus2;
-		unsigned char maxEn, maxOri, minOri, medianOri;
-		maxEn = *(lpMaxEnimage + i);
-		maxOri = *(lpMaximage + i);
-		minOri = *(lpMinimage + i);
-		medianOri = *(lpMediaimage + i);
-		minSamePlus = minOri + (maxEn - maxOri);
-		medianSamePlus = medianOri + (maxEn - maxOri);
-		minSamePlus2 = minSamePlus;
-		medianSamePlus2 = medianSamePlus;
-		if (medianSamePlus < 0)
-		{
-			medianSamePlus = abs(medianSamePlus);
-		}
-
-		if (minSamePlus < 0)
-		{
-			minSamePlus = abs(minSamePlus);
-			*(locationMapColor + z) = 1;
-			len++;
-		}
-		else 
-		{
-			*(locationMapColor + z) = 0;
-		}
-		z++;
-
-		*(lpMinEnimage + i) = minSamePlus;
-		*(lpMedianEnimage + i) = medianSamePlus;
-
-		if (minMinSamePlus > minSamePlus2)
-			minMinSamePlus = minSamePlus2;
-		if (minMedianSamePlus > medianSamePlus2)
-			minMedianSamePlus = medianSamePlus2;
-
-	}
-
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	int k = 0;
-	int j = GrayHead;
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-
-		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
-		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
-		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
-
-		j++;
-		k++;
-	}
-}
-
-long CDeprejbgDoc::colorToGrayOnlyPreprocess(unsigned char *originalImage, int pairs)
-{
-	long testbuf_lenThree;
-	int metInColorToGray=pairs-1;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//转灰度图
-	unsigned long m_ImageSize_ori = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-	int ColorImageWidth = ImageWidth;
-	ImageWidth = 3 * ImageWidth;   //RGB分别单独视作灰度图的一个像素值，图宽变为原来3倍
-	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hImage2D)
-	{
-		GlobalFree(hImage2D);
-		hImage2D = NULL;
-	}
-	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2D = (unsigned char*)hImage2D;
-
-	//将RGB存入灰度
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Image2D + GrayHead + z) = *(originalImage + j);
-		*(Image2D + GrayHead + z + 1) = *(originalImage + j + 1);
-		*(Image2D + GrayHead + z + 2) = *(originalImage + j + 2);
-		z = z + 3;
-	}
-
-	//初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	/*将所有像素的rgb值结合成一个直方图做预处理，并记录下产生的位置信息*/
-	onlyPreProcess = true;
-
-	lporigimage = Image2D;
-	deori(pairs);
-
-	exctThree = zn;
-	testbuf_lenThree = testbuf_len;
-	if (hprehistColorToGray)
-	{
-		GlobalFree(hprehistColorToGray);
-		hprehistColorToGray = NULL;
-	}
-	hprehistColorToGray = GlobalAlloc(GMEM_FIXED, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
-	lpprehistColorToGray = (unsigned char *)hprehistColorToGray;
-	memcpy(lpprehistColorToGray, lpprehist, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
-	
-	if (isMerge == true)
-	{
-		if (hlocmapColorToGray)
-		{
-			GlobalFree(hlocmapColorToGray);
-			hlocmapColorToGray = NULL;
-		}
-		hlocmapColorToGray = GlobalAlloc(GMEM_FIXED, lml);
-		locmapColorToGray = (unsigned char *)hlocmapColorToGray;
-		memcpy(locmapColorToGray, locmap, lml);
-	}
-
-	onlyPreProcess = false;
-
-	if (hImage2DEnhanced)
-	{
-		GlobalFree(hImage2DEnhanced);
-		hImage2DEnhanced = NULL;
-	}
-	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
-	memcpy(Image2DEnhanced, lpwmimage, m_ImageSize);
-
-	//初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(Image2DEnhanced + z);
-		*(lpwmimage + o + 1) = *(Image2DEnhanced + z + 1);
-		*(lpwmimage + o + 2) = *(Image2DEnhanced + z + 2);
-		z = z + 3;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-	//回写
-	m_ImageSize = m_ImageSize_ori;
-	ImageWidth = ColorImageWidth;
-
-	return testbuf_lenThree;
-}
-
-void CDeprejbgDoc::colorToGrayOnlyPreprocessRecover(int pairs, unsigned char *lpprehistColorToGray, unsigned char *locmapColorToGray, long exctThree)
-{
-	int metInColorToGray = pairs - 1;
-
-	unsigned char *wpColorToGray;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//转灰度图
-	unsigned long int m_ImageSize_ori = m_ImageSize;
-	int ColorImageWidth = ImageWidth;
-	ImageWidth = 3 * ImageWidth;
-	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//彩色图像转为灰度图像
-	//初始化
-	if (hImage2DEnhanced)
-	{
-		GlobalFree(hImage2DEnhanced);
-		hImage2DEnhanced = NULL;
-	}
-	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
-
-	//将RGB存入灰度
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Image2DEnhanced + GrayHead + z) = *(lpwmimage + j);
-		*(Image2DEnhanced + GrayHead + z + 1) = *(lpwmimage + j + 1);
-		*(Image2DEnhanced + GrayHead + z + 2) = *(lpwmimage + j + 2);
-		z = z + 3;
-	}
-
-	//初始化
-	if (hImage2D)
-	{
-		GlobalFree(hImage2D);
-		hImage2D = NULL;
-	}
-	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2D = (unsigned char*)hImage2D;
-
-	//恢复
-	wpColorToGray = Image2DEnhanced + GrayHead;
-	preProcessRecover(lpprehistColorToGray, locmapColorToGray, metInColorToGray, exctThree, wpColorToGray);
-	memcpy(Image2D, Image2DEnhanced, m_ImageSize);
-
-	
-	//增强结果存出后初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);   //彩色图像大小
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(Image2D + z);
-		*(lpwmimage + o + 1) = *(Image2D + z + 1);
-		*(lpwmimage + o + 2) = *(Image2D + z + 2);
-		z = z + 3;
-	}
-
-
-	//回指
-	lporigimage = lpoimage;
-
-	//回写
-	m_ImageSize = m_ImageSize_ori;
-	ImageWidth = ColorImageWidth;
-}
-
-void CDeprejbgDoc::maxEnhancedWithSamePlus()
-{
-	int s =50;
-	for (int pairs = s; pairs < s+1; pairs++)
-	{
-		int metInColorToGray = pairs - 1;
-		long testbuf_lenThree;
-
-		long el = 0, g = 0;
-
-		//将彩色图像RGB通道的值分别赋值到灰度图格式
-		int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-		int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-		//预处理
-		testbuf_lenThree = colorToGrayOnlyPreprocess(lporigimage,pairs);
-
-		//排序
-		deoriRGBPre(lpwmimage);
-
-		if (hMaximageTemporary)
-		{
-			GlobalFree(hMaximageTemporary);
-			hMaximageTemporary = NULL;
-		}
-		hMaximageTemporary = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-		lpMaximageTemporary = (unsigned char*)hMaximageTemporary;
-
-		memcpy(lpMaximageTemporary, lpMaximage, m_ImageSize);
-
-		if (hMaxEnimage)
-		{
-			GlobalFree(hMaxEnimage);
-			hMaxEnimage = NULL;
-		}
-		hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-		lpMaxEnimage = (unsigned char*)hMaxEnimage;
-		memcpy(lpMaxEnimage, lpMaximage, m_ImageSize);
-
-		int maxPairs;
-		for (int m = 0; m < metInColorToGray + 1; m++)
-		{
-			el = derem(lpMaximageTemporary, lpMaxEnimage, m, metInColorToGray, testbuf_lenThree, exctThree, locmapColorToGray, lpprehistColorToGray);                  //数据嵌入
-			g = g + el;
-			memcpy(lpMaxEnimage, lpMaximageTemporary, m_ImageSize);
-			/*
-			if (failed == 1)
-			{
-				maxPairs = m;
-				break;
-			}
-			*/
-		}
-		payload = g;
-
-		int maxBinNum[256];
-		histStatistics(lpMaximage, maxBinNum);
-		long maxEmbedLenPermit=0;
-		
-		for (int i = 0; i < pairs; i=i+2)
-		{
-			maxEmbedLenPermit = maxEmbedLenPermit + maxBinNum[i] + maxBinNum[i+1];
-		}
-		maxEmbedLenPermit = 8 * (maxEmbedLenPermit / 8);
-		
-		//处理Min、Median通道
-		if (hMinEnimage)
-		{
-			GlobalFree(hMinEnimage);
-			hMinEnimage = NULL;
-		}
-		hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-		lpMinEnimage = (unsigned char*)hMinEnimage;
-
-		if (hMedianEnimage)
-		{
-			GlobalFree(hMedianEnimage);
-			hMedianEnimage = NULL;
-		}
-		hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-		lpMedianEnimage = (unsigned char*)hMedianEnimage;
-
-		for (int i = GrayHead; i < m_ImageSize; i++)
-		{
-			unsigned char maxOri, medianOri, minOri, maxEn;
-
-			maxOri = *(lpMaximage + i);
-			maxEn = *(lpMaxEnimage + i);
-			medianOri = *(lpMediaimage + i);
-			minOri = *(lpMinimage + i);
-
-			*(lpMedianEnimage + i) = medianOri + (maxEn - maxOri);
-			*(lpMinEnimage + i) = minOri + (maxEn - maxOri);
-		}
-
-		//将RGB赋值到结果内存
-		if (hwmimage)
-		{
-			GlobalFree(hwmimage);
-			hwmimage = NULL;
-		}
-		hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-		lpwmimage = (unsigned char*)hwmimage;
-
-		//回指
-		lporigimage = lpoimage;
-
-		//将文件头写到结果指针
-		for (int i = 0; i < ColorHead; i++)
-		{
-			*(lpwmimage + i) = *(lporigimage + i);
-		}
-
-		int k = 0;
-		int j = GrayHead;
-		for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-		{
-
-			*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
-			*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
-			*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
-
-			j++;
-			k++;
-		}
-
-		psnr = psnrColorCalculate(lporigimage, lpwmimage);
-
-		if (failed == 1)
-		{
-			//pairs = maxPairs;
-			//s = maxPairs;
-			//failed = 0;
- 			break;
- 			//maxNotEmbed(s);
-		}
-
-		bool batchImg,hidingRate;
-		batchImg = false;
-		hidingRate = false;
-		
-		//批量出图
-		
-		if (strlen(FileTitle) == 11)       //ONLY FOR kodim+2位数
-		{
-			FileTitle[7] = '\0';
-		}
-		else if (strlen(FileTitle) == 10)       //ONLY FOR kodim+1位数
-		{
-			FileTitle[6] = '\0';
-		}
-		
-		/*
-		if (strlen(FileTitle) == 9)         //sipi+1位数
-		{
-			FileTitle[5] = '\0';
-		}
-		else if (strlen(FileTitle) == 10)    //sipi+2位数
-		{
-			FileTitle[6] = '\0';
-		}
-		*/
-		if (batchImg == true)
-		{
-			
-
-			char filename[500];
-
-			filename[0] = '\0';
-
-			sprintf(filename, "E:\\experiment\\task\\result-reversible\\sipi-new-pn\\%s_%d.bmp", FileTitle, pairs);
-
-			FILE *fb;
-
-			fb = fopen(filename, "wb");
-			if (fb == NULL)
-			{
-				AfxMessageBox("Can Not Open File To Write");
-				return;
-			}
-			fwrite(lpwmimage, sizeof(unsigned char), m_ColorImageSize, fb);
-			fclose(fb);
-		}
-		
-		
-		//嵌入率写入文件
-		if (hidingRate == true)
-		{
-			//净嵌入率pure hiding rate写入文件
-			FILE *payloadtxt;
-			payloadtxt = fopen("E:\\experiment\\task\\result-reversible\\sipi-new-pn\\pure hiding rate.txt", "a");
-			if (payloadtxt != NULL)
-				fprintf(payloadtxt, "\n %s_%d \t %6.4f", FileTitle, pairs, (double)payload / (double)(ImageHeight*ImageWidth));
-			fclose(payloadtxt);
-
-			//总嵌入写入文件
-			FILE *embnbtxt;
-			embnbtxt = fopen("E:\\experiment\\task\\result-reversible\\sipi-new-pn\\embnb hiding rate.txt", "a");
-			if (embnbtxt != NULL)
-				fprintf(embnbtxt, "\n %s_%d \t %6.4f", FileTitle, pairs, (double)embnb / (double)(ImageHeight*ImageWidth));
-			fclose(embnbtxt);
-			
-		}
-		
-
-	}
-}
-
-void CDeprejbgDoc::maxEnhancedWithSamePlusRecover()
-{
-	/*排序*/
-	/*提取*/
-	/*同加同减*/
-	/*预处理恢复*/
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//排序
-	depreRGBPre(lpwmimage);
-
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//max channel提取
-	memcpy(lppreimage, lpMaximage, m_ImageSize);
-	colorToGrayPreprocessRecover = true;
-	depre();
-	colorToGrayPreprocessRecover = false;
-	if (hMaxReimage)
-	{
-		GlobalFree(hMaxReimage);
-		hMaxReimage = NULL;
-	}
-	hMaxReimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMaxReimage = (unsigned char*)hMaxReimage;
-
-	memcpy(hMaxReimage, lpwmimage, m_ImageSize);
-
-	//处理Min median矩阵,同加同减
-	if (hMinReimage)
-	{
-		GlobalFree(hMinReimage);
-		hMinReimage = NULL;
-	}
-	hMinReimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMinReimage = (unsigned char*)hMinReimage;
-
-	if (hMedianReimage)
-	{
-		GlobalFree(hMedianReimage);
-		hMedianReimage = NULL;
-	}
-	hMedianReimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpMedianReimage = (unsigned char*)hMedianReimage;
-
-	for (int i = GrayHead; i < m_ImageSize; i++)
-	{
-		unsigned char maxRe, medianEn, minEn, maxEn;
-
-		maxRe = *(lpMaxReimage + i);
-		maxEn = *(lpMaximage + i);
-		medianEn = *(lpMediaimage + i);
-		minEn = *(lpMinimage + i);
-
-		*(lpMedianReimage + i) = medianEn - (maxEn - maxRe);
-		*(lpMinReimage + i) = minEn - (maxEn - maxRe);
-	}
-
-	//将RGB赋值到结果内存
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//回指
-	lporigimage = lpoimage;
-
-	//将文件头写到结果指针
-	for (int i = 0; i < ColorHead; i++)
-	{
-		*(lpwmimage + i) = *(lporigimage + i);
-	}
-
-	int k = 0;
-	int j = GrayHead;
-	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
-	{
-
-		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxReimage + j);
-		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianReimage + j);
-		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinReimage + j);
-
-		j++;
-		k++;
-	}
-
-	/*恢复预处理直方图*/
-	int pairs = mext + 1;
-	colorToGrayOnlyPreprocessRecover(pairs, lphist, lpextmap, exct);	
-}
-
-long CDeprejbgDoc::threeOnOneOnlyLeftPreprocess(unsigned char *originalImage, int pairs)
-{
-	int doublePairs = pairs * 2;
-	long testbuf_lenThree;
-	int metInColorToGray = doublePairs - 1;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//转灰度图
-	unsigned long m_ImageSize_ori = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-	int ColorImageWidth = ImageWidth;
-	ImageWidth = 3 * ImageWidth;   //RGB分别单独视作灰度图的一个像素值，图宽变为原来3倍
-	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-
-	//将彩色图像RGB通道的值分别赋值到灰度图格式
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-	//初始化
-	if (hImage2D)
-	{
-		GlobalFree(hImage2D);
-		hImage2D = NULL;
-	}
-	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2D = (unsigned char*)hImage2D;
-
-	//将RGB存入灰度
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Image2D + GrayHead + z) = *(originalImage + j);
-		*(Image2D + GrayHead + z + 1) = *(originalImage + j + 1);
-		*(Image2D + GrayHead + z + 2) = *(originalImage + j + 2);
-		z = z + 3;
-	}
-
-	//初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	/*将所有像素的rgb值结合成一个直方图做预处理，并记录下产生的位置信息*/
-	onlyPreProcess = true;
-	leftPreProcess = true;
-
-	lporigimage = Image2D;
-	deori(doublePairs);
-
-	exctThree = zn;
-	testbuf_lenThree = testbuf_len;
-	if (hprehistColorToGray)
-	{
-		GlobalFree(hprehistColorToGray);
-		hprehistColorToGray = NULL;
-	}
-	hprehistColorToGray = GlobalAlloc(GMEM_FIXED, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
-	lpprehistColorToGray = (unsigned char *)hprehistColorToGray;
-	memcpy(lpprehistColorToGray, lpprehist, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
-
-	if (isMerge == true)
-	{
-		if (hlocmapColorToGray)
-		{
-			GlobalFree(hlocmapColorToGray);
-			hlocmapColorToGray = NULL;
-		}
-		hlocmapColorToGray = GlobalAlloc(GMEM_FIXED, lml);
-		locmapColorToGray = (unsigned char *)hlocmapColorToGray;
-		memcpy(locmapColorToGray, locmap, lml);
-	}
-
-	leftPreProcess = false;
-	onlyPreProcess = false;
-
-	if (hImage2DEnhanced)
-	{
-		GlobalFree(hImage2DEnhanced);
-		hImage2DEnhanced = NULL;
-	}
-	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
-	memcpy(Image2DEnhanced, lpwmimage, m_ImageSize);
-
-	//初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(Image2DEnhanced + z);
-		*(lpwmimage + o + 1) = *(Image2DEnhanced + z + 1);
-		*(lpwmimage + o + 2) = *(Image2DEnhanced + z + 2);
-		z = z + 3;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-	//回写
-	m_ImageSize = m_ImageSize_ori;
-	ImageWidth = ColorImageWidth;
-
-	return testbuf_lenThree;
-}
-
-void CDeprejbgDoc::threeOnOneOnlyLeftPreprocessRecover(int pairs, unsigned char *imageAfterPre, unsigned char *lpprehistColorToGray, unsigned char *locmapColorToGray, long exctThree)
-{
-	int doublePairs = pairs * 2;
-	int metInColorToGray = doublePairs - 1;
-
-	unsigned char *wpColorToGray;
-
-	//记录lporigimage的指向
-	lpoimage = lporigimage;
-
-	//转灰度图
-	unsigned long int m_ImageSize_ori = m_ImageSize;
-	int ColorImageWidth = ImageWidth;
-	ImageWidth = 3 * ImageWidth;
-	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
-
-	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
-	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
-
-
-	//初始化
-	if (hImage2DEnhanced)
-	{
-		GlobalFree(hImage2DEnhanced);
-		hImage2DEnhanced = NULL;
-	}
-	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
-
-	//将RGB存入灰度
-	int z = 0;
-	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
-	{
-		*(Image2DEnhanced + GrayHead + z) = *(imageAfterPre + j);
-		*(Image2DEnhanced + GrayHead + z + 1) = *(imageAfterPre + j + 1);
-		*(Image2DEnhanced + GrayHead + z + 2) = *(imageAfterPre + j + 2);
-		z = z + 3;
-	}
-
-	//初始化
-	if (hImage2D)
-	{
-		GlobalFree(hImage2D);
-		hImage2D = NULL;
-	}
-	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
-	Image2D = (unsigned char*)hImage2D;
-
-	leftPreProcessRecover = true;
-	wpColorToGray = Image2DEnhanced + GrayHead;
-	preProcessRecover(lpprehistColorToGray, locmapColorToGray, metInColorToGray, exctThree, wpColorToGray);
-	memcpy(Image2D, Image2DEnhanced, m_ImageSize);
-	leftPreProcessRecover = false;
-
-	//增强结果存出后初始化
-	if (hwmimage)
-	{
-		GlobalFree(hwmimage);
-		hwmimage = NULL;
-	}
-	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);   //彩色图像大小
-	lpwmimage = (unsigned char*)hwmimage;
-
-	//将文件头写到结果指针
-	for (int m = 0; m < ColorHead; m++)
-	{
-		*(lpwmimage + m) = *(lpoimage + m);
-	}
-
-	z = GrayHead;
-	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
-	{
-		*(lpwmimage + o) = *(Image2D + z);
-		*(lpwmimage + o + 1) = *(Image2D + z + 1);
-		*(lpwmimage + o + 2) = *(Image2D + z + 2);
-		z = z + 3;
-	}
-
-	//回指
-	lporigimage = lpoimage;
-
-	//回写
-	m_ImageSize = m_ImageSize_ori;
-	ImageWidth = ColorImageWidth;
-
-}
-
 void CDeprejbgDoc::twoSortAndPreprocess()
 {
-	int s =40;
-	for (int pairs = s; pairs < s+1; pairs++)
+	int s = 64;
+	for (int pairs = 2; pairs < s; pairs++)
 	{
 		int metInColorToGray = pairs - 1;
 		
@@ -12384,6 +7464,7 @@ void CDeprejbgDoc::twoSortAndPreprocess()
 			//pairs = maxPairs;
 			//s = maxPairs;
 			//failed = 0;
+			s = pairs - 1;
 			break;
 			//maxNotEmbed(s);
 		}
@@ -12430,7 +7511,314 @@ void CDeprejbgDoc::twoSortAndPreprocess()
 		}
 
 	}
+	//再以最大的pairs运行一次得出结果
+	if (failed == 1) {
+		failed = 0;
+		for (int pairs = s; pairs < s + 1; pairs++)
+		{
+			int metInColorToGray = pairs - 1;
 
+			long exctMaxChannel, testbuf_lenMaxChannel, testbuf_lenThree;
+
+			int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+			int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+			//记录lporigimage的指向
+			lpoimage = lporigimage;
+
+			//第一次排序
+			deoriRGBPre(lporigimage);
+
+			//初始化
+			if (hMaxPreimage)
+			{
+				GlobalFree(hMaxPreimage);
+				hMaxPreimage = NULL;
+			}
+			hMaxPreimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+			lpMaxPreimage = (unsigned char*)hMaxPreimage;
+
+			if (hMedianPreimage)
+			{
+				GlobalFree(hMedianPreimage);
+				hMedianPreimage = NULL;
+			}
+			hMedianPreimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+			lpMedianPreimage = (unsigned char*)hMedianPreimage;
+
+			if (hMinPreimage)
+			{
+				GlobalFree(hMinPreimage);
+				hMinPreimage = NULL;
+			}
+			hMinPreimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+			lpMinPreimage = (unsigned char*)hMinPreimage;
+
+			/*对MaxChannel预处理,并记录相关参数,得到lpMaxPreimage*/
+			onlyPreprocessOneChannel(lpMaximage, pairs);
+			exctMaxChannel = exctOneChannel;
+			testbuf_lenMaxChannel = testbuf_lenOneChannel;
+			if (hprehistMaxChannel)
+			{
+				GlobalFree(hprehistMaxChannel);
+				hprehistMaxChannel = NULL;
+			}
+			hprehistMaxChannel = GlobalAlloc(GMEM_FIXED, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
+			lpprehistMaxChannel = (unsigned char*)hprehistMaxChannel;
+			memcpy(lpprehistMaxChannel, lpprehistOneChannel, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
+			if (isMerge == true)
+			{
+				if (hlocmapMaxChannel)
+				{
+					GlobalFree(hlocmapMaxChannel);
+					hlocmapMaxChannel = NULL;
+				}
+				hlocmapMaxChannel = GlobalAlloc(GMEM_FIXED, lml);
+				locmapMaxChannel = (unsigned char*)hlocmapMaxChannel;
+				memcpy(locmapMaxChannel, locmapOneChannel, lml);
+			}
+
+			memcpy(lpMaxPreimage, lpwmimage, m_ImageSize);
+
+			//test
+			int min = 0;
+			for (int i = GrayHead; i < m_ImageSize; i++)
+			{
+				int maxOri, maxPre;
+				maxOri = *(lpMaximage + i);
+				maxPre = *(lpMaxPreimage + i);
+				if (min < (maxPre - maxOri))
+					min = maxPre - maxOri;
+				//if (min == -30 && maxOri!=255 && min == (maxPre - maxOri))
+				//	min = -30;
+			}
+
+			/*同加同减调整Median Channel、Min Channel，并解决溢出问题,得到第一次预处理后的图像，方案二：直方图整体后移一个pairs长度*/
+			int minPrenum = 0, medianPrenum = 0;
+			for (int i = GrayHead; i < m_ImageSize; i++)
+			{
+				int maxOri, medianOri, minOri, maxPre, medianPre, minPre;
+
+				maxOri = *(lpMaximage + i);
+				medianOri = *(lpMediaimage + i);
+				minOri = *(lpMinimage + i);
+
+				maxPre = *(lpMaxPreimage + i) + pairs;
+				minPre = minOri + (maxPre - maxOri);
+				medianPre = medianOri + (maxPre - maxOri);
+
+				*(lpMaxPreimage + i) = maxPre;
+				*(lpMedianPreimage + i) = medianPre;
+				*(lpMinPreimage + i) = minPre;
+			}
+
+			//将预处理结果赋值
+			if (hwmimage)
+			{
+				GlobalFree(hwmimage);
+				hwmimage = NULL;
+			}
+			hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+			lpwmimage = (unsigned char*)hwmimage;
+
+			//回指
+			lporigimage = lpoimage;
+
+			//将文件头写到结果指针
+			for (int i = 0; i < ColorHead; i++)
+			{
+				*(lpwmimage + i) = *(lporigimage + i);
+			}
+
+			int k = 0;
+			int j = GrayHead;
+			for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+			{
+
+				*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxPreimage + j);
+				*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianPreimage + j);
+				*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinPreimage + j);
+
+				j++;
+				k++;
+			}
+
+			if (hfirstPreimage)
+			{
+				GlobalFree(hfirstPreimage);
+				hfirstPreimage = NULL;
+			}
+			hfirstPreimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+			firstPreimage = (unsigned char*)hfirstPreimage;
+			memcpy(firstPreimage, lpwmimage, m_ColorImageSize);
+
+			//自动出图
+			/*
+			if (batchImg == true)
+			{
+				char filename[500];
+				filename[0] = '\0';
+				sprintf(filename, "E:\\experiment\\task\\result-reversible\\kodak-pre\\%s_firstpre_%d.bmp", FileTitle, pairs);
+				FILE *fb;
+				fb = fopen(filename, "wb");
+				if (fb == NULL)
+				{
+					AfxMessageBox("Can Not Open File To Write");
+					return;
+				}
+				fwrite(lpwmimage, sizeof(unsigned char), m_ColorImageSize, fb);
+				fclose(fb);
+			}
+			*/
+
+			/*合成一个大直方图进行预处理，并记录相关参数：exctThree, locmapColorToGray, lpprehistColorToGray为全局，testbuf_lenThree为局部*/
+			//testbuf_lenThree = colorToGrayOnlyPreprocess(firstPreimage, pairs);
+			testbuf_lenThree = threeOnOneOnlyLeftPreprocess(firstPreimage, pairs);
+
+
+			/*直方图整体平移回到中间*/
+			if (hsecondPreimage)
+			{
+				GlobalFree(hsecondPreimage);
+				hsecondPreimage = NULL;
+			}
+			hsecondPreimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+			secondPreimage = (unsigned char*)hsecondPreimage;
+			memcpy(secondPreimage, lpwmimage, m_ColorImageSize);
+
+			//自动出图
+			/*
+			if (batchImg == true)
+			{
+				char filename[500];
+				filename[0] = '\0';
+				sprintf(filename, "E:\\experiment\\task\\result-reversible\\kodak-pre\\%s_secondpre_%d.bmp", FileTitle, pairs);
+				FILE *fb;
+				fb = fopen(filename, "wb");
+				if (fb == NULL)
+				{
+					AfxMessageBox("Can Not Open File To Write");
+					return;
+				}
+				fwrite(secondPreimage, sizeof(unsigned char), m_ColorImageSize, fb);
+				fclose(fb);
+			}
+			*/
+			for (int i = ColorHead; i < m_ColorImageSize; i++)
+			{
+				unsigned char secondPre;
+				secondPre = *(secondPreimage + i);
+				*(secondPreimage + i) = secondPre - pairs;
+			}
+
+
+			/*第二次排序，对整体预处理后的大直方图排序*/
+			deoriRGBPre(secondPreimage);
+
+			/*对排序后的max channel进行嵌入*/
+			long el = 0, g = 0;
+			if (hMaximageTemporary)
+			{
+				GlobalFree(hMaximageTemporary);
+				hMaximageTemporary = NULL;
+			}
+			hMaximageTemporary = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+			lpMaximageTemporary = (unsigned char*)hMaximageTemporary;
+
+			memcpy(lpMaximageTemporary, lpMaximage, m_ImageSize);
+
+			if (hMaxEnimage)
+			{
+				GlobalFree(hMaxEnimage);
+				hMaxEnimage = NULL;
+			}
+			hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+			lpMaxEnimage = (unsigned char*)hMaxEnimage;
+			memcpy(lpMaxEnimage, lpMaximage, m_ImageSize);
+
+			//额外数据构造
+			extraBookkeepingDataEmbed(pairs, exctThree, testbuf_lenThree, locmapColorToGray, lpprehistColorToGray);
+			int doubleMet = 2 * pairs - 1;
+			int lpprehistLen = 2 * (doubleMet + 2);
+			int addBookkeepingLen = (lpprehistLen + sizeof(long) * 2 + testbuf_lenThree) * 8;
+
+			//数据嵌入
+			addDataEmbedJudge = true;
+			for (int m = 0; m < metInColorToGray + 1; m++)
+			{
+				el = derem(lpMaximageTemporary, lpMaxEnimage, m, metInColorToGray, testbuf_lenMaxChannel, exctMaxChannel, locmapMaxChannel, lpprehistMaxChannel);                  //数据嵌入
+				g = g + el;
+				memcpy(lpMaxEnimage, lpMaximageTemporary, m_ImageSize);
+			}
+			payload = g - addBookkeepingLen;
+			addDataEmbedJudge = false;
+
+			/*处理min、median channel*/
+			if (hMinEnimage)
+			{
+				GlobalFree(hMinEnimage);
+				hMinEnimage = NULL;
+			}
+			hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+			lpMinEnimage = (unsigned char*)hMinEnimage;
+
+			if (hMedianEnimage)
+			{
+				GlobalFree(hMedianEnimage);
+				hMedianEnimage = NULL;
+			}
+			hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+			lpMedianEnimage = (unsigned char*)hMedianEnimage;
+
+			for (int i = GrayHead; i < m_ImageSize; i++)
+			{
+				unsigned char maxOri, medianOri, minOri, maxEn;
+
+				maxOri = *(lpMaximage + i);
+				maxEn = *(lpMaxEnimage + i);
+				medianOri = *(lpMediaimage + i);
+				minOri = *(lpMinimage + i);
+
+				*(lpMedianEnimage + i) = medianOri + (maxEn - maxOri);
+				*(lpMinEnimage + i) = minOri + (maxEn - maxOri);
+			}
+
+			/*将RGB赋值到结果内存*/
+			if (hwmimage)
+			{
+				GlobalFree(hwmimage);
+				hwmimage = NULL;
+			}
+			hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+			lpwmimage = (unsigned char*)hwmimage;
+
+			//回指
+			lporigimage = lpoimage;
+
+			//将文件头写到结果指针
+			for (int i = 0; i < ColorHead; i++)
+			{
+				*(lpwmimage + i) = *(lporigimage + i);
+			}
+
+			k = 0;
+			j = GrayHead;
+			for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+			{
+
+				*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
+				*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
+				*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
+
+				j++;
+				k++;
+			}
+
+			met = metInColorToGray;
+			psnr = psnrColorCalculate(lporigimage, lpwmimage);
+
+		}
+	}
 }
 
 /*调用此函数后要记录相应的参数和记录:exctOneChannel、testbuf_lenOneChannel、lpprehistOneChannel、locmapOneChannel*/
@@ -13015,6 +8403,216 @@ void CDeprejbgDoc::extraBookkeepingRecover()
 
 }
 
+long CDeprejbgDoc::threeOnOneOnlyLeftPreprocess(unsigned char* originalImage, int pairs)
+{
+	int doublePairs = pairs * 2;
+	long testbuf_lenThree;
+	int metInColorToGray = doublePairs - 1;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//转灰度图
+	unsigned long m_ImageSize_ori = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+	int ColorImageWidth = ImageWidth;
+	ImageWidth = 3 * ImageWidth;   //RGB分别单独视作灰度图的一个像素值，图宽变为原来3倍
+	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hImage2D)
+	{
+		GlobalFree(hImage2D);
+		hImage2D = NULL;
+	}
+	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2D = (unsigned char*)hImage2D;
+
+	//将RGB存入灰度
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Image2D + GrayHead + z) = *(originalImage + j);
+		*(Image2D + GrayHead + z + 1) = *(originalImage + j + 1);
+		*(Image2D + GrayHead + z + 2) = *(originalImage + j + 2);
+		z = z + 3;
+	}
+
+	//初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	/*将所有像素的rgb值结合成一个直方图做预处理，并记录下产生的位置信息*/
+	onlyPreProcess = true;
+	leftPreProcess = true;
+
+	lporigimage = Image2D;
+	deori(doublePairs);
+
+	exctThree = zn;
+	testbuf_lenThree = testbuf_len;
+	if (hprehistColorToGray)
+	{
+		GlobalFree(hprehistColorToGray);
+		hprehistColorToGray = NULL;
+	}
+	hprehistColorToGray = GlobalAlloc(GMEM_FIXED, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
+	lpprehistColorToGray = (unsigned char*)hprehistColorToGray;
+	memcpy(lpprehistColorToGray, lpprehist, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
+
+	if (isMerge == true)
+	{
+		if (hlocmapColorToGray)
+		{
+			GlobalFree(hlocmapColorToGray);
+			hlocmapColorToGray = NULL;
+		}
+		hlocmapColorToGray = GlobalAlloc(GMEM_FIXED, lml);
+		locmapColorToGray = (unsigned char*)hlocmapColorToGray;
+		memcpy(locmapColorToGray, locmap, lml);
+	}
+
+	leftPreProcess = false;
+	onlyPreProcess = false;
+
+	if (hImage2DEnhanced)
+	{
+		GlobalFree(hImage2DEnhanced);
+		hImage2DEnhanced = NULL;
+	}
+	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
+	memcpy(Image2DEnhanced, lpwmimage, m_ImageSize);
+
+	//初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(Image2DEnhanced + z);
+		*(lpwmimage + o + 1) = *(Image2DEnhanced + z + 1);
+		*(lpwmimage + o + 2) = *(Image2DEnhanced + z + 2);
+		z = z + 3;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+	//回写
+	m_ImageSize = m_ImageSize_ori;
+	ImageWidth = ColorImageWidth;
+
+	return testbuf_lenThree;
+}
+
+void CDeprejbgDoc::threeOnOneOnlyLeftPreprocessRecover(int pairs, unsigned char* imageAfterPre, unsigned char* lpprehistColorToGray, unsigned char* locmapColorToGray, long exctThree)
+{
+	int doublePairs = pairs * 2;
+	int metInColorToGray = doublePairs - 1;
+
+	unsigned char* wpColorToGray;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//转灰度图
+	unsigned long int m_ImageSize_ori = m_ImageSize;
+	int ColorImageWidth = ImageWidth;
+	ImageWidth = 3 * ImageWidth;
+	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+
+	//初始化
+	if (hImage2DEnhanced)
+	{
+		GlobalFree(hImage2DEnhanced);
+		hImage2DEnhanced = NULL;
+	}
+	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
+
+	//将RGB存入灰度
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Image2DEnhanced + GrayHead + z) = *(imageAfterPre + j);
+		*(Image2DEnhanced + GrayHead + z + 1) = *(imageAfterPre + j + 1);
+		*(Image2DEnhanced + GrayHead + z + 2) = *(imageAfterPre + j + 2);
+		z = z + 3;
+	}
+
+	//初始化
+	if (hImage2D)
+	{
+		GlobalFree(hImage2D);
+		hImage2D = NULL;
+	}
+	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2D = (unsigned char*)hImage2D;
+
+	leftPreProcessRecover = true;
+	wpColorToGray = Image2DEnhanced + GrayHead;
+	preProcessRecover(lpprehistColorToGray, locmapColorToGray, metInColorToGray, exctThree, wpColorToGray);
+	memcpy(Image2D, Image2DEnhanced, m_ImageSize);
+	leftPreProcessRecover = false;
+
+	//增强结果存出后初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);   //彩色图像大小
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(Image2D + z);
+		*(lpwmimage + o + 1) = *(Image2D + z + 1);
+		*(lpwmimage + o + 2) = *(Image2D + z + 2);
+		z = z + 3;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+	//回写
+	m_ImageSize = m_ImageSize_ori;
+	ImageWidth = ColorImageWidth;
+
+}
+
 /*以下的无用*/
 void CDeprejbgDoc::maxNotEmbed(int targetS)
 {
@@ -13291,4 +8889,4714 @@ void CDeprejbgDoc::Test2()
 
 	bubbleSort(leftBinNum, 128);
 	bubbleSort(rightBinNum, 128);
+}
+
+void CDeprejbgDoc::Genhanced()
+{
+	//增强S值
+	int pairs = 30;
+
+	//先不用嵌入彩色locationmap
+	addDataEmbedJudge = false;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	/*记录位置图新增定义*/
+	struct jbg85_enc_state s;
+	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
+	long locationMapSize;              //locationmap大小
+	unsigned char location8;           //一个字节，记录8个位置
+
+	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
+	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
+
+	/*初始化*/
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	//位置图初始化
+	if (hGchannelMap)
+	{
+		GlobalFree(hGchannelMap);
+		hGchannelMap = NULL;
+	}
+	hGchannelMap = GlobalAlloc(GMEM_FIXED, locationMapSize);
+	GchannelMap = (unsigned char*)hGchannelMap;
+	for (int i = 0; i < locationMapSize; i++)
+		*(GchannelMap + i) = 0;
+
+	/*RGB通道分别赋值*/
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
+		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lporigimage + j);
+		z++;
+	}
+
+	//增强G通道
+	lporigimage = Gchannel;
+	//memcpy(lporigimage+GrayHead, Gchannel+GrayHead, m_ImageSize);
+	deori(pairs);
+
+	if (hGchannelEnhanced)
+	{
+		GlobalFree(hGchannelEnhanced);
+		hGchannelEnhanced = NULL;
+	}
+	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
+	memcpy(GchannelEnhanced, lpwmimage, m_ImageSize);
+
+	if (hRchannelEnhanced)
+	{
+		GlobalFree(hRchannelEnhanced);
+		hRchannelEnhanced = NULL;
+	}
+	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
+
+	if (hBchannelEnhanced)
+	{
+		GlobalFree(hBchannelEnhanced);
+		hBchannelEnhanced = NULL;
+	}
+	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
+
+	Rless = 0, Rmore = 0, Bless = 0, Bmore = 0;
+	Rlow = 0, Rhigh = 255, Blow = 0, Bhigh = 255;
+
+	/*G通道增强后，R、B通道的值跟着改变*/
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < locationMapWidth; column++)
+		{
+			int traverse = GrayHead + row * ImageWidth + column;                  //遍历全图的像素值
+			int a;
+			int p;
+			int tmp;
+			a = *(traverse + GchannelEnhanced) + *(traverse + Rchannel) - *(traverse + Gchannel);              //a=G'+(R-G)
+			p = *(traverse + GchannelEnhanced) + *(traverse + Bchannel) - *(traverse + Gchannel);              //p=G'+(B-G)
+
+			if (column % 8 == 0)      location8 = 0;          //以8为长度，起始时先置0
+
+			if (column < ImageWidth)                          //不超出原图宽度时，进行处理
+			{
+
+				//若有一个通道溢出，则两个都不变
+				if (a >= 0 && a <= 255 && p >= 0 && p <= 255)
+				{
+					*(RchannelEnhanced + traverse) = a;
+					*(BchannelEnhanced + traverse) = p;
+					location8 = (location8 << 1) + 0;
+				}
+				else
+				{
+					*(RchannelEnhanced + traverse) = *(Rchannel + traverse);
+					*(BchannelEnhanced + traverse) = *(Bchannel + traverse);
+					location8 = (location8 << 1) + 1;
+				}
+
+				/*
+				//哪个通道溢出，哪个通道不变,则必须由两个locationMap记录
+				if (a < 0)
+				{
+					//*(RchannelEnhanced + traverse) = 0;
+					//if (a < Rlow) { Rlow = a; }                 //统计最小的溢出值
+					//Rless++;
+					*(RchannelEnhanced + traverse) = *(Rchannel + traverse);
+					tmp = 1;
+				}
+				else if (a > 255)
+				{
+					//*(RchannelEnhanced + traverse) = 255;
+					//if (a >Rhigh) { Rhigh = a; }               //统计最大的溢出值
+					//Rmore++;
+					*(RchannelEnhanced + traverse) = *(Rchannel + traverse);
+					tmp = 1;
+				}
+				else
+				{
+					*(RchannelEnhanced + traverse) = a;
+					tmp = 0;
+				}
+
+				if (p < 0)
+				{
+					//*(BchannelEnhanced + traverse) = 0;
+					//if (p < Blow) { Blow = p; }               //统计最小的溢出值
+					//Bless++;
+					*(BchannelEnhanced + traverse) = *(Bchannel + traverse);
+					tmp = 1;
+				}
+				else if (p > 255)
+				{
+					//*(BchannelEnhanced + traverse) = 255;
+					//if (p > Bhigh) { Bhigh = p; }             //统计最大的溢出值
+					//Bmore++;
+					*(BchannelEnhanced + traverse) = *(Bchannel + traverse);
+					tmp = 1;
+				}
+				else
+				{
+					*(BchannelEnhanced + traverse) = p;
+					tmp = 0;
+				}
+				*/
+			}
+			else
+				location8 = (location8 << 1) + 0;																		//当超出原图宽度时都使用0填充
+
+			if (column % 8 == 7)        *(GchannelMap + (row * locationMapWidth + column) / 8) = location8;            //到第8位时将location8赋值到map中
+
+
+			//GBestS = min;
+			//BBestS = max;
+		}
+
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o + 2) = *(RchannelEnhanced + z);
+		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
+		*(lpwmimage + o) = *(BchannelEnhanced + z);
+		z++;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+	/*locationMap压缩*/
+	if (hlocationCompression)
+	{
+		GlobalFree(hlocationCompression);
+	}
+	hlocationCompression = GlobalAlloc(GMEM_FIXED, locationMapSize);
+	locationCompression = (unsigned char*)hlocationCompression;
+	for (int i = 0; i < locationMapSize; i++)
+		*(locationCompression + i) = 0;
+
+	memcpy(locationCompression, GchannelMap, locationMapSize);
+
+	testbuf_len = 0;
+
+	testbuf = (unsigned char*)checkedmalloc(TESTBUF_SIZE);                        //压缩后输出
+
+	jbg85_enc_init(&s, locationMapWidth, ImageHeight, testbuf_writel, NULL);                //初始化
+	jbg85_enc_options(&s, JBG_TPBON, 0, -1);                                       //参数传递
+
+	for (int row = 0; row < ImageHeight; row++)
+		jbg85_enc_lineout(&s, locationCompression + row * locationMapWidth / 8, locationCompression + (row - 1) * locationMapWidth / 8, locationCompression + (row - 2) * locationMapWidth / 8);    //参数：一行，前一行，前前一行
+
+	buflen = testbuf_len;
+
+	memcpy(locationCompression, testbuf, buflen);
+
+	ColorLocationMap(locationCompression, buflen, -1);
+
+	addDataLen = buflen + sizeof(long);
+
+	ColorToThreeTimesGray();
+}
+
+void CDeprejbgDoc::GenhancedRecovery()
+{
+	bool haveChannel = false;
+	ColorToThreeTimesGrayRecovery(haveChannel);
+
+	/*记录位置图新增定义*/
+	struct jbg85_dec_state d;
+	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
+	long locationMapSize;              //locationmap大小
+	unsigned char location8;           //一个字节，记录8个位置
+	unsigned char* image, * buffer;
+	size_t plane_size, buffer_len;
+	size_t cnt;
+
+	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
+	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
+
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	/*初始化*/
+	if (hGchannelEnhanced)
+	{
+		GlobalFree(hGchannelEnhanced);
+		hGchannelEnhanced = NULL;
+	}
+	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
+
+	if (hRchannelEnhanced)
+	{
+		GlobalFree(hRchannelEnhanced);
+		hRchannelEnhanced = NULL;
+	}
+	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
+
+	if (hBchannelEnhanced)
+	{
+		GlobalFree(hBchannelEnhanced);
+		hBchannelEnhanced = NULL;
+	}
+	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
+
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	/*RGB通道分别赋值*/
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(RchannelEnhanced + GrayHead + z) = *(lpwmimage + j + 2);
+		*(GchannelEnhanced + GrayHead + z) = *(lpwmimage + j + 1);
+		*(BchannelEnhanced + GrayHead + z) = *(lpwmimage + j);
+		z++;
+	}
+
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	if (hpreimage)
+	{
+		GlobalFree(hpreimage);
+		hpreimage = NULL;
+	}
+	hpreimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lppreimage = (unsigned char*)hpreimage;
+
+	/*恢复G通道数据，存至Gchannel中*/
+	memcpy(lppreimage, GchannelEnhanced, m_ImageSize);
+	depre();
+	memcpy(Gchannel, lpwmimage, m_ImageSize);
+
+	/*解压*/
+
+	plane_size = ImageHeight * locationMapWidth;
+	int result;
+
+	//buffer_len = ((lmwidth >> 3) + !!(lmwidth & 7)) * 3;            //缓冲区长度
+	buffer_len = plane_size;
+	buffer = (unsigned char*)checkedmalloc(buffer_len);           //缓冲区分配内存
+	image = (unsigned char*)checkedmalloc(plane_size);            //输出图像分配内存
+	jbg85_dec_init(&d, buffer, buffer_len, line_out, image);
+	//result = jbg85_dec_in(&d, locationCompression, buflen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
+	result = jbg85_dec_in(&d, colorLocationMap, ExtractMapLen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
+
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			int i = column / 8;                                                 //求location map的宽
+			int j = 7 + i * 8 - column;                                             //计算右移对应的位数，
+			unsigned char tmp = *(image + row * locationMapWidth / 8 + i);                               //读取对应的预处理location map数据，一个
+			int m = (tmp >> j) & 1;                                               //m为读取到的location map的位数据，为0或1
+
+			int traverse = GrayHead + row * ImageWidth + column;                  //遍历全图的像素值
+			int a;
+			int p;
+			a = *(traverse + Gchannel) + *(traverse + RchannelEnhanced) - *(traverse + GchannelEnhanced);              //a=G'+(R-G)
+			p = *(traverse + Gchannel) + *(traverse + BchannelEnhanced) - *(traverse + GchannelEnhanced);              //p=G'+(B-G)
+
+			if (m == 1)
+			{
+				*(Rchannel + traverse) = *(RchannelEnhanced + traverse);
+				*(Bchannel + traverse) = *(BchannelEnhanced + traverse);
+			}
+			else if (m == 0)
+			{
+				*(Rchannel + traverse) = a;
+				*(Bchannel + traverse) = p;
+			}
+		}
+
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o + 2) = *(Rchannel + z);
+		*(lpwmimage + o + 1) = *(Gchannel + z);
+		*(lpwmimage + o) = *(Bchannel + z);
+		z++;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+}
+
+void CDeprejbgDoc::ColorLocationMap(unsigned char* ColorMap, long MapLength, int channel)
+{
+	unsigned char intermediary;
+	unsigned char* lenmediary;
+	unsigned char* channelmediary;
+	int shiftnumber, shiftvalue;
+	long* lengthEmbed;
+	int* channelEmbed;
+	int parameterLen;
+	addDataEmbedJudge = true;
+
+	if (channel > 2 || channel < 0)
+	{
+		if (haddDataEmbed)
+		{
+			GlobalFree(haddDataEmbed);
+			haddDataEmbed = NULL;
+		}
+		haddDataEmbed = GlobalAlloc(GMEM_FIXED, (MapLength + sizeof(long)) * 8);
+		addDataEmbed = (unsigned char*)haddDataEmbed;
+
+		/*Maplength赋值到addDataEmbed中*/
+		lengthEmbed = &MapLength;
+		for (int i = 0; i < sizeof(long); i++)
+		{
+			lenmediary = (unsigned char*)lengthEmbed + i;
+			intermediary = *lenmediary;
+			for (int k = 0; k < 8; k++)
+			{
+				*(addDataEmbed + 8 * i + k) = 0;
+				shiftnumber = k;
+				shiftvalue = (intermediary >> shiftnumber) & 1;
+				*(addDataEmbed + 8 * i + k) = shiftvalue;
+			}
+		}
+		parameterLen = sizeof(long);
+	}
+	else if (channel == 0 || channel == 1 || channel == 2)
+	{
+		if (haddDataEmbed)
+		{
+			GlobalFree(haddDataEmbed);
+			haddDataEmbed = NULL;
+		}
+		haddDataEmbed = GlobalAlloc(GMEM_FIXED, (MapLength + sizeof(long) + sizeof(int)) * 8);
+		addDataEmbed = (unsigned char*)haddDataEmbed;
+
+		//先嵌入map长度再嵌入增强的channel是哪个
+		/*Maplength赋值到addDataEmbed中*/
+		lengthEmbed = &MapLength;
+		for (int i = 0; i < sizeof(long); i++)
+		{
+			lenmediary = (unsigned char*)lengthEmbed + i;
+			intermediary = *lenmediary;
+			for (int k = 0; k < 8; k++)
+			{
+				*(addDataEmbed + 8 * i + k) = 0;
+				shiftnumber = k;
+				shiftvalue = (intermediary >> shiftnumber) & 1;
+				*(addDataEmbed + 8 * i + k) = shiftvalue;
+			}
+		}
+
+		/*channel赋值到addDataEmbed中*/
+		channelEmbed = &channel;
+		for (int i = 0; i < sizeof(int); i++)
+		{
+			channelmediary = (unsigned char*)channelEmbed + i;
+			intermediary = *channelmediary;
+			for (int k = 0; k < 8; k++)
+			{
+				*(addDataEmbed + 8 * (sizeof(long) + i) + k) = 0;
+				shiftnumber = k;
+				shiftvalue = (intermediary >> shiftnumber) & 1;
+				*(addDataEmbed + 8 * (sizeof(long) + i) + k) = shiftvalue;
+			}
+		}
+
+		parameterLen = sizeof(long) + sizeof(int);
+	}
+	else
+	{
+		failed = true;
+	}
+
+
+	/*ColorMap赋值到addDataEmbed中*/
+	for (int i = 0; i < MapLength; i++)
+	{
+		intermediary = *(ColorMap + i);
+		for (int k = 0; k < 8; k++)
+		{
+			*(addDataEmbed + 8 * (i + parameterLen) + k) = 0;
+			shiftnumber = k;
+			shiftvalue = (intermediary >> shiftnumber) & 1;
+			*(addDataEmbed + 8 * (i + parameterLen) + k) = shiftvalue;
+		}
+	}
+
+	/*
+	for (int i = 0; i < (MapLength + parameterLen)*8; i++)
+	{
+		FILE *payloadtxt;
+		payloadtxt = fopen("E:\\experiment\\task\\ColorImage-7method\\addDataEmbed.txt", "a");
+		if (payloadtxt != NULL)
+			fprintf(payloadtxt, "%d \t", *(addDataEmbed+i));
+		fclose(payloadtxt);
+	}
+	*/
+
+}
+
+void CDeprejbgDoc::ColorMapRecovery(bool haveChannel)
+{
+	int last;
+	long* maplen;
+	HANDLE hmaplen = NULL;
+	int* channelChosen;
+	HANDLE hchannelChosen = NULL;
+	long start = 0;
+	unsigned char shiftvalue;
+	unsigned char* intermediate;
+	int parameterLen;
+
+	/*找出最后一轮提取额外数据的轮数last*/
+	for (int i = 63; i >= 0; i--)
+	{
+		if (dataLen[i] == 0)
+			last = i - 1;
+	}
+
+	if (hmaplen)
+	{
+		GlobalFree(hmaplen);
+		hmaplen = NULL;
+	}
+	hmaplen = GlobalAlloc(GMEM_FIXED, sizeof(long));
+	maplen = (long*)hmaplen;
+
+	/*先读取extractdata最后一轮提取出的数据，此块数据中含有map长度*/
+	intermediate = (unsigned char*)maplen;
+	for (int i = 0; i < sizeof(long); i++)
+	{
+		*(intermediate + i) = 0;
+		for (int k = 0; k < 8; k++)
+		{
+			shiftvalue = *(ExtractData + haveStored - dataLen[last] + 8 * i + 7 - k);
+			*(intermediate + i) = (*(intermediate + i) << 1) + shiftvalue;
+		}
+	}
+	ExtractMapLen = *maplen;
+
+	if (haveChannel == true)
+	{
+		/*读取出增强了哪个channel*/
+		parameterLen = sizeof(long) + sizeof(int);
+
+		if (hchannelChosen)
+		{
+			GlobalFree(hchannelChosen);
+			hchannelChosen = NULL;
+		}
+		hchannelChosen = GlobalAlloc(GMEM_FIXED, sizeof(int));
+		channelChosen = (int*)hchannelChosen;
+
+		intermediate = (unsigned char*)channelChosen;
+		for (int i = 0; i < sizeof(int); i++)
+		{
+			*(intermediate + i) = 0;
+			for (int k = 0; k < 8; k++)
+			{
+				shiftvalue = *(ExtractData + haveStored - dataLen[last] + 8 * (sizeof(long) + i) + 7 - k);
+				*(intermediate + i) = (*(intermediate + i) << 1) + shiftvalue;
+			}
+		}
+		channelChosenExtract = *channelChosen;
+	}
+	else
+	{
+		parameterLen = sizeof(long);
+	}
+
+	if (hExtractDataOrder)
+	{
+		GlobalFree(hExtractDataOrder);
+		hExtractDataOrder = NULL;
+	}
+	hExtractDataOrder = GlobalAlloc(GMEM_FIXED, m_ImageSize * 24);
+	ExtractDataOrder = (unsigned char*)hExtractDataOrder;
+
+	/*将ExtractData的顺序调整好*/
+	for (int i = last; i >= 0; i--)
+	{
+		haveStored = haveStored - dataLen[i];
+		memcpy(ExtractDataOrder + start, ExtractData + haveStored, dataLen[i]);
+		start = dataLen[i] + start;
+	}
+
+	for (int i = 0; i < addDataLen * 8; i++)
+	{
+		/*
+		FILE *payloadtxt;
+		payloadtxt = fopen("E:\\experiment\\task\\ColorImage-7method\\ExtractDataOrder.txt", "a");
+		if (payloadtxt != NULL)
+			fprintf(payloadtxt, "%d \t", *(ExtractDataOrder + i));
+		fclose(payloadtxt);
+		*/
+
+		if (*(ExtractDataOrder + i) != *(addDataEmbed + i))
+		{
+			FILE* payloadtxt;
+			payloadtxt = fopen("E:\\experiment\\task\\ColorImage-7method\\different.txt", "a");
+			if (payloadtxt != NULL)
+				fprintf(payloadtxt, "%d \t", i);
+			fclose(payloadtxt);
+		}
+	}
+
+	/*从调整好顺序的ExtractDataOrder取出map*/
+	if (hExtractMap)
+	{
+		GlobalFree(hExtractMap);
+		hExtractMap = NULL;
+	}
+	hExtractMap = GlobalAlloc(GMEM_FIXED, ExtractMapLen * 8);
+	ExtractMap = (unsigned char*)hExtractMap;
+	memcpy(ExtractMap, ExtractDataOrder + parameterLen * 8, ExtractMapLen * 8);
+
+	/*移位调整，得到压缩后的locationmap*/
+	if (hcolorLocationMap)
+	{
+		GlobalFree(hcolorLocationMap);
+		hcolorLocationMap = NULL;
+	}
+	hcolorLocationMap = GlobalAlloc(GMEM_FIXED, ExtractMapLen);
+	colorLocationMap = (unsigned char*)hcolorLocationMap;
+
+	for (int i = 0; i < ExtractMapLen; i++)
+	{
+		*(colorLocationMap + i) = 0;
+		for (int k = 0; k < 8; k++)
+		{
+			shiftvalue = *(ExtractMap + 7 - k + 8 * i);
+			*(colorLocationMap + i) = (*(colorLocationMap + i) << 1) + shiftvalue;
+		}
+	}
+
+	addDataEmbedJudge = false;
+
+}
+
+//彩色转变灰度
+void CDeprejbgDoc::ColorToThreeTimesGray()
+{
+	//增强对数
+	int pairs = 1;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将用其他增强后的彩色图像作为输入
+	lporigimage = lpwmimage;
+
+	//转灰度图
+	unsigned long m_ImageSize_ori = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+	int ColorImageWidth = ImageWidth;
+	ImageWidth = 3 * ImageWidth;   //RGB分别单独视作灰度图的一个像素值，图宽变为原来3倍
+	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hImage2D)
+	{
+		GlobalFree(hImage2D);
+		hImage2D = NULL;
+	}
+	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2D = (unsigned char*)hImage2D;
+
+	//将RGB存入灰度
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Image2D + GrayHead + z) = *(lporigimage + j);
+		*(Image2D + GrayHead + z + 1) = *(lporigimage + j + 1);
+		*(Image2D + GrayHead + z + 2) = *(lporigimage + j + 2);
+		z = z + 3;
+	}
+
+	//初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//增强转化后的灰度图
+	lporigimage = Image2D;
+	deori(pairs);
+
+	if (hImage2DEnhanced)
+	{
+		GlobalFree(hImage2DEnhanced);
+		hImage2DEnhanced = NULL;
+	}
+	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
+	memcpy(Image2DEnhanced, lpwmimage, m_ImageSize);
+
+	//初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(Image2DEnhanced + z);
+		*(lpwmimage + o + 1) = *(Image2DEnhanced + z + 1);
+		*(lpwmimage + o + 2) = *(Image2DEnhanced + z + 2);
+		z = z + 3;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+	//回写
+	m_ImageSize = m_ImageSize_ori;
+	ImageWidth = ColorImageWidth;
+}
+
+void CDeprejbgDoc::ColorToThreeTimesGrayRecovery(bool haveChannel)
+{
+	/*提取额外数据存储的初始化*/
+	if (hExtractData)
+	{
+		GlobalFree(hExtractData);
+		hExtractData = NULL;
+	}
+	hExtractData = GlobalAlloc(GMEM_FIXED, m_ImageSize * 24);
+	ExtractData = (unsigned char*)hExtractData;
+
+	/*额外数据长度的记录数组*/
+	for (int i = 0; i < 64; i++)
+	{
+		dataLen[i] = 0;
+	}
+
+	//初始化赋零
+	haveStored = 0;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//转灰度图
+	unsigned long int m_ImageSize_ori = m_ImageSize;
+	int ColorImageWidth = ImageWidth;
+	ImageWidth = 3 * ImageWidth;
+	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//彩色图像转为灰度图像
+	//初始化
+	if (hImage2DEnhanced)
+	{
+		GlobalFree(hImage2DEnhanced);
+		hImage2DEnhanced = NULL;
+	}
+	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
+
+	//将RGB和I存入灰度
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		// *(Image2D + GrayHead + z) = *(lporigimage + j) * 0.3 + *(lporigimage + j + 1) * 0.59 + *(lporigimage + j + 2) * 0.11;
+		*(Image2DEnhanced + GrayHead + z) = *(lpwmimage + j);
+		*(Image2DEnhanced + GrayHead + z + 1) = *(lpwmimage + j + 1);
+		*(Image2DEnhanced + GrayHead + z + 2) = *(lpwmimage + j + 2);
+		z = z + 3;
+	}
+
+	//增强结果存出后初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	if (hpreimage)
+	{
+		GlobalFree(hpreimage);
+		hpreimage = NULL;
+	}
+	hpreimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lppreimage = (unsigned char*)hpreimage;
+
+	//恢复
+	memcpy(lppreimage, Image2DEnhanced, m_ImageSize);
+	depre();
+
+	//初始化
+	if (hImage2D)
+	{
+		GlobalFree(hImage2D);
+		hImage2D = NULL;
+	}
+	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2D = (unsigned char*)hImage2D;
+
+	//恢复结果存入
+	memcpy(Image2D, lpwmimage, m_ImageSize);
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(Image2D + z);
+		*(lpwmimage + o + 1) = *(Image2D + z + 1);
+		*(lpwmimage + o + 2) = *(Image2D + z + 2);
+		z = z + 3;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+	//回写
+	m_ImageSize = m_ImageSize_ori;
+	ImageWidth = ColorImageWidth;
+
+	//调用，提取压缩后数据
+	ColorMapRecovery(haveChannel);
+}
+
+//增强max最多的？或者直接是G通道？
+void CDeprejbgDoc::enhancedMax()
+{
+	//增强对数
+	int pairs = 50;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	/*记录位置图新增定义*/
+	struct jbg85_enc_state s;
+	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
+	long locationMapSize;              //locationmap大小
+	unsigned char location8;           //一个字节，记录8个位置
+
+	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
+	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
+
+	//初始化
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	if (hlocationMapColor)
+	{
+		GlobalFree(hlocationMapColor);
+		hlocationMapColor = NULL;
+	}
+	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	locationMapColor = (unsigned char*)hlocationMapColor;
+
+	if (hoverflowMap)
+	{
+		GlobalFree(hoverflowMap);
+		hoverflowMap = NULL;
+	}
+	hoverflowMap = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	overflowMap = (unsigned char*)hoverflowMap;
+
+	//各通道赋值
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
+		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lporigimage + j);
+		z++;
+	}
+
+	//调用，计算c1和c2
+	deoriRGBPre(lporigimage);
+
+	//找到Max值最多的通道
+	int Rnum = 0, Gnum = 0, Bnum = 0;
+	for (int i = 0; i < m_ImageSize - GrayHead; i++)
+	{
+		if (*(lpMreimage + i) == 2)
+			Rnum++;
+		else if (*(lpMreimage + i) == 1)
+			Gnum++;
+		else if (*(lpMreimage + i) == 0)
+			Bnum++;
+	}
+
+	//保存增强后的初始化
+	if (hchannelEnhanced)
+	{
+		GlobalFree(hchannelEnhanced);
+		hchannelEnhanced = NULL;
+	}
+	hchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	channelEnhanced = (unsigned char*)hchannelEnhanced;
+
+	//int channel;  //标记增强的是哪个通道,取值与RGBPre保持一致
+	//哪个最多增强哪个通道
+	if (Gnum >= Rnum & Gnum >= Bnum)
+	{
+		lporigimage = Gchannel;
+		deori(pairs);
+		channel = 1;
+		memcpy(channelEnhanced, lpwmimage, m_ImageSize);
+	}
+	else if (Rnum >= Gnum & Rnum >= Bnum)
+	{
+		lporigimage = Rchannel;
+		deori(pairs);
+		channel = 2;
+		memcpy(channelEnhanced, lpwmimage, m_ImageSize);
+	}
+	else if (Bnum >= Gnum & Bnum >= Rnum)
+	{
+		lporigimage = Bchannel;
+		deori(pairs);
+		channel = 0;
+		memcpy(channelEnhanced, lpwmimage, m_ImageSize);
+	}
+	Blow = channel;
+	//Bhigh = Bnum;
+
+	//三个记录max、median、min增强后指针的初始化
+	if (hMaxEnhanced)
+	{
+		GlobalFree(hMaxEnhanced);
+		hMaxEnhanced = NULL;
+	}
+	hMaxEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MaxEnhanced = (unsigned char*)hMaxEnhanced;
+
+	if (hMedianEnhanced)
+	{
+		GlobalFree(hMedianEnhanced);
+		hMedianEnhanced = NULL;
+	}
+	hMedianEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MedianEnhanced = (unsigned char*)hMedianEnhanced;
+
+	if (hMinEnhanced)
+	{
+		GlobalFree(hMinEnhanced);
+		hMinEnhanced = NULL;
+	}
+	hMinEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MinEnhanced = (unsigned char*)hMinEnhanced;
+
+	//增强后max、median、min矩阵赋值
+	int k = 0;
+	Rless = 0, Rmore = 0, Bless = 0, Bmore = 0, Rhigh = 0, Rlow = 0;
+	int maxErrorMax = 0, maxErrorMed = 0, maxErrorMin = 0;
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		double c2 = *(lpC2image + k);
+		double c = *(lpCimage + k);
+		double c2En, cEn;
+		double maxEn, medianEn, minEn;
+		double maxRe, medianRe, minRe;
+		unsigned char maxEnChar, medianEnChar, minEnChar;
+		bool overflow = false;
+		unsigned char maxReChar, medianReChar, minReChar;
+		unsigned char oriMax = *(lpMaximage + i);
+		unsigned char oriMedian = *(lpMediaimage + i);
+		unsigned char oriMin = *(lpMinimage + i);
+		int errorMax = 0, errorMed = 0, errorMin = 0;
+
+		int row = 211, column = 579;
+		int height, width;
+		if (i == row * ImageWidth + column + GrayHead)
+		{
+			height = (i - GrayHead) / ImageWidth;
+			width = height * ImageWidth;
+		}
+
+		//若增强的为max
+		if (channel == *(lpMreimage + k))
+		{
+			maxEn = *(channelEnhanced + i);
+			maxEnChar = (unsigned char)maxEn;
+			if (maxEnChar != 0)
+				minEn = maxEn * c2 + 0.5;
+			else
+				minEn = 0;
+			minEnChar = (unsigned char)minEn;
+			if (maxEnChar != minEnChar)
+				medianEn = maxEn * (c - c2 * c + c2) + 0.5;
+			else
+				medianEn = maxEn;
+			medianEnChar = (unsigned char)medianEn;
+
+			cEn = ((double)(medianEnChar - minEnChar)) / ((double)(maxEnChar - minEnChar));
+			c2En = ((double)minEnChar) / ((double)maxEnChar);
+
+			maxRe = oriMax;
+			maxReChar = (unsigned char)maxRe;
+			if (maxReChar != 0)
+				minRe = maxRe * c2En + 0.5;
+			else
+				minRe = 0;
+			minReChar = (unsigned char)minRe;
+			if (maxReChar != minReChar)
+				medianRe = maxRe * (cEn - c2En * cEn + c2En) + 0.5;
+			else
+				medianRe = maxRe;
+			medianReChar = (unsigned char)medianRe;
+
+			//判断还原后的值与原图值是否相等，相等则赋增强值，不等则赋原值
+			*(MaxEnhanced + i) = *(channelEnhanced + i);
+			if ((unsigned char)minReChar != (unsigned char)oriMin || (unsigned char)medianReChar != (unsigned char)oriMedian)
+			{
+				/*
+				//若不能还愿，则尝试原值+增强通道的前后之差，效果不明显
+				minEn = oriMin + maxEnChar - maxRe;
+				medianEn = oriMedian + maxEnChar - maxRe;
+				*(MinEnhanced + i) = minEn;
+				*(MedianEnhanced + i) = medianEn;
+				if (minEn < 0 || minEn > 255)
+					*(MinEnhanced + i) = oriMin;
+				if (medianEn < 0 || medianEn > 255)
+					*(MedianEnhanced + i) = oriMedian;
+				*/
+
+				/*计算最大差值，没什么用
+				if (minReChar - oriMin > errorMax)
+					errorMax = minReChar - oriMin;
+				if (medianReChar - oriMedian > errorMax)
+					errorMax = medianReChar - oriMedian;
+				*/
+
+				* (MinEnhanced + i) = oriMin;
+				*(MedianEnhanced + i) = oriMedian;
+
+				Rless++;
+				*(locationMapColor + k) = 1;
+				*(overflowMap + k) = 0;
+			}
+			else
+			{
+				*(MinEnhanced + i) = minEnChar;
+				*(MedianEnhanced + i) = medianEnChar;
+				*(locationMapColor + k) = 0;
+				*(overflowMap + k) = 0;
+				Rmore++;
+			}
+
+		}
+
+		//若增强的为min
+		else if (channel == *(lpMireimage + k))
+		{
+			minEn = *(channelEnhanced + i);
+			minEnChar = (unsigned char)minEn;
+			if (oriMin != 0)
+			{
+				maxEn = minEn / c2 + 0.5;
+				if (maxEn >= 256)
+				{
+					errorMax = maxEn - 255;
+					overflow = true;		//标记为256，表示无法还原到最初值，即max、median不做改变？
+				}
+			}
+			else
+			{
+				overflow = true;			//这种情况需要单独标记？
+				maxEn = 256;
+			}
+
+			maxEnChar = (unsigned char)maxEn;
+			if (oriMin != 0)
+			{
+				medianEn = minEn * (c / c2 + 1 - c) + 0.5;
+				if (medianEn >= 256)
+				{
+					errorMed = medianEn - 255;
+					overflow = true;
+				}
+			}
+			else {
+				overflow = true;
+				medianEn = 256;
+			}
+
+			medianEnChar = (unsigned char)medianEn;
+
+			/*
+			maxEnChar = (unsigned char)maxEn;
+			medianEnChar = (unsigned char)medianEn;
+			minEnChar = (unsigned char)minEn;
+			*/
+
+			cEn = ((double)(medianEnChar - minEnChar)) / ((double)(maxEnChar - minEnChar));
+			c2En = ((double)minEnChar) / ((double)maxEnChar);
+
+			minRe = oriMin;
+			minReChar = (unsigned char)minRe;
+			if (minEnChar != 0)
+				maxRe = minRe / c2En + 0.5;
+			else
+				maxRe = maxEn;
+			maxReChar = (unsigned char)maxRe;
+			if (minEnChar != 0)
+				medianRe = minRe * (cEn / c2En + 1 - cEn) + 0.5;
+			else
+				medianRe = medianEn;
+			medianReChar = (unsigned char)medianRe;
+
+
+			*(MinEnhanced + i) = *(channelEnhanced + i);
+			if ((unsigned char)maxReChar != (unsigned char)oriMax || (unsigned char)medianReChar != (unsigned char)oriMedian)
+			{
+				/*
+				//若不能还愿，则尝试原值+增强通道的前后之差，效果不明显
+				maxEn = oriMax + minEnChar - minRe;
+				medianEn = oriMedian + minEnChar - minRe;
+				*(MaxEnhanced + i) = maxEn;
+				*(MedianEnhanced + i) = medianEn;
+				if (maxEn > 255 || maxEn < 0)
+					*(MaxEnhanced + i) = *(lpMaximage + i);
+				if (medianEn > 255 || medianEn < 0)
+					*(MedianEnhanced + i) = *(lpMediaimage + i);
+				*/
+				if (overflow == true)
+				{
+					*(overflowMap + k) = 1;
+					*(locationMapColor + k) = 0;
+					Bless++;
+				}
+				else
+				{
+					*(locationMapColor + k) = 1;
+					*(overflowMap + k) = 0;
+				}
+
+				*(MaxEnhanced + i) = *(lpMaximage + i);
+				*(MedianEnhanced + i) = *(lpMediaimage + i);
+
+				if (maxReChar - oriMax > errorMax)
+					errorMax = maxReChar - oriMax;
+				if (medianReChar - oriMedian > errorMax)
+					errorMax = medianReChar - oriMedian;
+
+			}
+			else
+			{
+				*(MaxEnhanced + i) = maxEnChar;
+				*(MedianEnhanced + i) = medianEnChar;
+				Bmore++;
+				*(locationMapColor + k) = 0;
+				*(overflowMap + k) = 0;
+			}
+		}
+
+		//若增强的为median
+		else if (channel == *(lpMereimage + k))
+		{
+			medianEn = *(channelEnhanced + i);
+			medianEnChar = (unsigned char)medianEn;
+			if (oriMax != 0 && (c2 + c - c * c2) != 0)
+			{
+				maxEn = medianEn / (c2 + c - c * c2) + 0.5;
+				if (maxEn >= 256)
+				{
+					errorMax = maxEn - 255;
+					overflow = true;		//标记为256，表示无法还原到最初值，即max、median不做改变？
+				}
+			}
+			else {
+				overflow = true;			//这种情况需要单独标记？
+				maxEn = 256;
+			}
+			maxEnChar = (unsigned char)maxEn;
+			if (oriMax != 0 && (c2 + c - c * c2) != 0)
+			{
+				minEn = medianEn * c2 / (c2 + c - c * c2) + 0.5;
+				if (minEn >= 256)
+				{
+					errorMin = minEn - 255;
+					overflow = true;
+				}
+			}
+			else {
+				overflow = true;
+				minEn = 256;
+			}
+			minEnChar = (unsigned char)minEn;
+
+
+			/*
+			maxEnChar = (unsigned char)maxEn;
+			medianEnChar = (unsigned char)medianEn;
+			minEnChar = (unsigned char)minEn;
+			*/
+
+			cEn = ((double)(medianEnChar - minEnChar)) / ((double)(maxEnChar - minEnChar));
+			c2En = ((double)minEnChar) / ((double)maxEnChar);
+
+			medianRe = oriMedian;
+			medianReChar = (unsigned char)medianRe;
+			if (maxEnChar != 0 && (c2En + cEn - cEn * c2En) != 0)
+				maxRe = medianRe / (c2En + cEn - cEn * c2En) + 0.5;
+			else
+				maxRe = maxEn;
+			maxReChar = (unsigned char)maxRe;
+			if (maxEnChar != 0 && (c2En + cEn - cEn * c2En) != 0)
+				minRe = medianRe * c2En / (c2En + cEn - cEn * c2En) + 0.5;
+			else
+				minRe = minEn;
+			minReChar = (unsigned char)minRe;
+
+			/*
+			maxReChar = (unsigned char)maxRe;
+			medianReChar = (unsigned char)medianRe;
+			minReChar = (unsigned char)minRe;
+			*/
+
+			*(MedianEnhanced + i) = *(channelEnhanced + i);
+			if ((unsigned char)maxReChar != (unsigned char)oriMax || (unsigned char)minReChar != (unsigned char)oriMin)
+			{
+				/*
+				//若不能还愿，则尝试原值+增强通道的前后之差，效果不明显
+				maxEn = oriMax + medianEnChar - medianRe;
+				minEn = oriMin + medianEnChar - medianRe;
+				*(MaxEnhanced + i) = *(lpMaximage + i);
+				*(MinEnhanced + i) = *(lpMinimage + i);
+				if (maxEn > 255 || maxEn < 0)
+					*(MaxEnhanced + i) = *(lpMaximage + i);
+				if (minEn > 255 || minEn < 0)
+					*(MinEnhanced + i) = *(lpMinimage + i);
+				*/
+
+				if (overflow == true)
+				{
+					*(locationMapColor + k) = 0;
+					*(overflowMap + k) = 1;
+					Bless++;
+				}
+				else
+				{
+					*(locationMapColor + k) = 1;
+					*(overflowMap + k) = 0;
+				}
+				*(MaxEnhanced + i) = *(lpMaximage + i);
+				*(MinEnhanced + i) = *(lpMinimage + i);
+			}
+			else
+			{
+				*(MaxEnhanced + i) = maxEnChar;
+				*(MinEnhanced + i) = minEnChar;
+				*(locationMapColor + k) = 0;
+				*(overflowMap + k) = 0;
+				Rhigh++;
+			}
+		}
+		k++;
+		if (maxErrorMax < errorMax)	maxErrorMax = errorMax;
+		if (maxErrorMed < errorMed)	maxErrorMed = errorMed;
+		if (maxErrorMin < errorMin)	maxErrorMin = errorMin;
+		//Bhigh = errorMax;
+	}
+
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	//int max;
+	//int t;
+	k = 0;
+	int j = GrayHead;
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+		*(lpwmimage + i + *(lpMreimage + k)) = *(MaxEnhanced + j);
+		*(lpwmimage + i + *(lpMereimage + k)) = *(MedianEnhanced + j);
+		*(lpwmimage + i + *(lpMireimage + k)) = *(MinEnhanced + j);
+		j++;
+		k++;
+	}
+
+	////////////////////////////////////////////////
+	/*预测方法运用尝试*/
+	if (hRchannelEnhanced)
+	{
+		GlobalFree(hRchannelEnhanced);
+		hRchannelEnhanced = NULL;
+	}
+	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
+
+	if (hGchannelEnhanced)
+	{
+		GlobalFree(hGchannelEnhanced);
+		hGchannelEnhanced = NULL;
+	}
+	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
+
+	if (hBchannelEnhanced)
+	{
+		GlobalFree(hBchannelEnhanced);
+		hBchannelEnhanced = NULL;
+	}
+	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
+
+	z = GrayHead;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(RchannelEnhanced + z) = *(lpwmimage + j + 2);
+		*(GchannelEnhanced + z) = *(lpwmimage + j + 1);
+		*(BchannelEnhanced + z) = *(lpwmimage + j);
+		z++;
+	}
+
+	if (hreferOri1)
+	{
+		GlobalFree(hreferOri1);
+		hreferOri1 = NULL;
+	}
+	hreferOri1 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referOri1 = (unsigned char*)hreferOri1;
+
+	if (hreferOri2)
+	{
+		GlobalFree(hreferOri2);
+		hreferOri2 = NULL;
+	}
+	hreferOri2 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referOri2 = (unsigned char*)hreferOri2;
+
+	if (hreferEn1)
+	{
+		GlobalFree(hreferEn1);
+		hreferEn1 = NULL;
+	}
+	hreferEn1 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referEn1 = (unsigned char*)hreferEn1;
+
+	if (hreferEn2)
+	{
+		GlobalFree(hreferEn2);
+		hreferEn2 = NULL;
+	}
+	hreferEn2 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referEn2 = (unsigned char*)hreferEn2;
+
+	if (hreferPredict1Ori)
+	{
+		GlobalFree(hreferPredict1Ori);
+		hreferPredict1Ori = NULL;
+	}
+	hreferPredict1Ori = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referPredict1Ori = (unsigned char*)hreferPredict1Ori;
+
+	if (hreferPredict2Ori)
+	{
+		GlobalFree(hreferPredict2Ori);
+		hreferPredict2Ori = NULL;
+	}
+	hreferPredict2Ori = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referPredict2Ori = (unsigned char*)hreferPredict2Ori;
+
+	if (hreferPredict1En)
+	{
+		GlobalFree(hreferPredict1En);
+		hreferPredict1En = NULL;
+	}
+	hreferPredict1En = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referPredict1En = (unsigned char*)hreferPredict1En;
+
+	if (hreferPredict2En)
+	{
+		GlobalFree(hreferPredict2En);
+		hreferPredict2En = NULL;
+	}
+	hreferPredict2En = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referPredict2En = (unsigned char*)hreferPredict2En;
+
+	if (hreferHoldOri)
+	{
+		GlobalFree(hreferHoldOri);
+		hreferHoldOri = NULL;
+	}
+	hreferHoldOri = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referHoldOri = (unsigned char*)hreferHoldOri;
+
+	if (hreferHoldEn)
+	{
+		GlobalFree(hreferHoldEn);
+		hreferHoldEn = NULL;
+	}
+	hreferHoldEn = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	referHoldEn = (unsigned char*)hreferHoldEn;
+
+	if (hmapFlow)
+	{
+		GlobalFree(hmapFlow);
+		hmapFlow = NULL;
+	}
+	hmapFlow = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	mapFlow = (unsigned char*)hmapFlow;
+
+	if (hmapFlow2)
+	{
+		GlobalFree(hmapFlow2);
+		hmapFlow2 = NULL;
+	}
+	hmapFlow2 = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	mapFlow2 = (unsigned char*)hmapFlow2;
+
+	if (channel == 0)
+	{
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(referOri1 + i) = *(Rchannel + i);
+			*(referOri2 + i) = *(Gchannel + i);
+			*(referHoldOri + i) = *(Bchannel + i);
+
+			*(referEn1 + i) = *(RchannelEnhanced + i);
+			*(referEn2 + i) = *(GchannelEnhanced + i);
+			*(referHoldEn + i) = *(BchannelEnhanced + i);
+		}
+	}
+	else if (channel == 1)
+	{
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(referOri1 + i) = *(Rchannel + i);
+			*(referHoldOri + i) = *(Gchannel + i);
+			*(referOri2 + i) = *(Bchannel + i);
+
+			*(referEn1 + i) = *(RchannelEnhanced + i);
+			*(referHoldEn + i) = *(GchannelEnhanced + i);
+			*(referEn2 + i) = *(BchannelEnhanced + i);
+		}
+	}
+	else if (channel == 2)
+	{
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(referHoldOri + i) = *(Rchannel + i);
+			*(referOri1 + i) = *(Gchannel + i);
+			*(referOri2 + i) = *(Bchannel + i);
+
+			*(referHoldEn + i) = *(RchannelEnhanced + i);
+			*(referEn1 + i) = *(GchannelEnhanced + i);
+			*(referEn2 + i) = *(BchannelEnhanced + i);
+		}
+	}
+
+	/*
+	k = 0;
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			double ori1Sum, en1Sum, ori2Sum, en2Sum;
+			ori1Sum = 0, en1Sum = 0, ori2Sum = 0, en2Sum = 0;
+			if (*(locationMapColor + row * ImageWidth + column) == 1)
+			{
+				int num = 0;
+				for (int i = row - 1; i <= row + 1; i++)
+					for (int j = column - 1; j <= column + 1; j++)
+					{
+						if (j<0 || j>=ImageWidth || i<0 || i>=ImageHeight)
+							continue;
+						if (*(locationMapColor + i * ImageWidth + j) == 0)
+						{
+							ori1Sum = *(referOri1 + i * ImageWidth + j + GrayHead) + ori1Sum;
+							ori2Sum = *(referOri2 + i * ImageWidth + j + GrayHead) + ori2Sum;
+							en1Sum = *(referEn1 + i * ImageWidth + j + GrayHead) + en1Sum;
+							en2Sum = *(referEn2 + i * ImageWidth + j + GrayHead) + en2Sum;
+							num++;
+						}
+					}
+
+				if (num == 0)
+				{
+					*(mapFlow + k) = 1;
+				}
+				else
+				{
+					int ori1Ave = ori1Sum / num + 0.5;
+					int ori2Ave = ori2Sum / num + 0.5;
+					int en1Ave = en1Sum / num + 0.5;
+					int en2Ave = en2Sum / num + 0.5;
+
+					int referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
+					int referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
+
+					int correlation1 = en1Ave + (ori1Ave - referOri1Val);
+					int correlation2 = en2Ave + (ori2Ave - referOri2Val);
+
+					if (correlation1 > 255 || correlation2 > 255 || correlation1 < 0 || correlation2 < 0)
+					{
+						*(mapFlow + k) = 1;
+					}
+					else
+					{
+						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1;
+						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
+						*(mapFlow + k) = 0;
+					}
+
+				}
+				k++;
+			}
+		}
+	*/
+
+	/*
+	k = 0;
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			int ori1Diff, ori2Diff, ori1MinDiff, ori2MinDiff, correlation1, correlation2;
+			ori1MinDiff = 256, ori2MinDiff = 256;
+			if (*(locationMapColor + row * ImageWidth + column) == 1)
+			{
+				int num = 0;
+				int neighbor1[4], neighbor2[4];
+
+				int referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
+				int referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
+
+				for (int i = row - 1; i <= row; i++)
+					for (int j = column - 1; j <= column; j++)
+					{
+						if (num != 3)
+						{
+							if (j < 0 || j >= ImageWidth || i < 0 || i >= ImageHeight)
+								continue;
+						//if (*(locationMapColor + i * ImageWidth + j) == 0)
+						//{
+							ori1Diff = *(referOri1 + i * ImageWidth + j + GrayHead) - referOri1Val;
+							ori2Diff = *(referOri2 + i * ImageWidth + j + GrayHead) - referOri2Val;
+							if (abs(ori1Diff) < abs(ori1MinDiff))
+							{
+								ori1MinDiff = ori1Diff;
+								correlation1 = *(referEn1 + i * ImageWidth + j + GrayHead) + ori1MinDiff;
+							}
+							if (abs(ori2Diff) < abs(ori2MinDiff))
+							{
+								ori2MinDiff = ori2Diff;
+								correlation2 = *(referEn2 + i * ImageWidth + j + GrayHead) + ori2MinDiff;
+							}
+							num++;
+						}
+
+						//}
+					}
+
+				if (num == 0)
+				{
+					*(mapFlow + k) = 1;
+				}
+				else
+				{
+					if (correlation1 > 255 || correlation2 > 255 || correlation1 < 0 || correlation2 < 0)
+					{
+						*(mapFlow + k) = 1;
+					}
+					else
+					{
+						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1;
+						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
+						*(mapFlow + k) = 0;
+					}
+
+				}
+				k++;
+			}
+		}
+	*/
+
+	/*
+	k = 0;
+	for(int row=0;row<ImageHeight;row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			int medOri1, medOri2, medEn1, medEn2;
+			int oriNeighbor1[3], enNeighbor1[3], oriNeighbor2[3], enNeighbor2[3];
+			int correlation1, correlation2;
+			if (*(locationMapColor + row * ImageWidth + column) == 0)     //若map标记0，则可用原值
+			{
+				*(referPredict1Ori + row * ImageWidth + column + GrayHead) = *(referOri1 + row * ImageWidth + column + GrayHead);
+				*(referPredict1En + row * ImageWidth + column + GrayHead) = *(referEn1 + row * ImageWidth + column + GrayHead);
+				*(referPredict2Ori + row * ImageWidth + column + GrayHead) = *(referOri2 + row * ImageWidth + column + GrayHead);
+				*(referPredict2En + row * ImageWidth + column + GrayHead) = *(referEn2 + row * ImageWidth + column + GrayHead);
+			}
+			else if (*(locationMapColor + row * ImageWidth + column) == 1)
+			{
+				int num = 0;
+				for(int i =row-1;i<=row;i++)
+					for (int j = column - 1; j <= column; j++)
+					{
+						if (num < 3)
+						{
+							if (j < 0 || j >= ImageWidth || i < 0 || i >= ImageHeight)
+							{
+								num++;
+								continue;
+							}
+							oriNeighbor1[num] = *(referPredict1Ori + i * ImageWidth + j + GrayHead);
+							enNeighbor1[num] = *(referPredict1En + i * ImageWidth + j + GrayHead);
+							oriNeighbor2[num] = *(referPredict2Ori + i * ImageWidth + j + GrayHead);
+							enNeighbor2[num] = *(referPredict2En + i * ImageWidth + j + GrayHead);
+							num++;
+						}
+
+					}
+
+				medOri1 = MED(oriNeighbor1[0], oriNeighbor1[1], oriNeighbor1[2]);
+				medOri2 = MED(oriNeighbor2[0], oriNeighbor2[1], oriNeighbor2[2]);
+				medEn1 = MED(enNeighbor1[0], enNeighbor1[1], enNeighbor1[2]);
+				medEn2 = MED(enNeighbor2[0], enNeighbor2[1], enNeighbor2[2]);
+
+				int referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
+				int referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
+
+				if ((medOri1 - referOri1Val) < 10 && (medOri2 - referOri2Val) < 10)
+				{
+					correlation1 = medEn1 + (medOri1 - referOri1Val);
+					correlation2 = medEn2 + (medOri2 - referOri2Val);
+
+					if (correlation1 > 255 || correlation1 < 0 || correlation2 > 255 || correlation2 < 0)
+					{
+						*(mapFlow + k) = 1;
+					}
+					else
+					{
+						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1;
+						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
+						*(mapFlow + k) = 0;
+					}
+				}
+				else
+				{
+					*(mapFlow + k) = 1;
+				}
+
+				k++;
+
+			}
+		}
+	*/
+	int kkk = 0;
+	int max = 0, min = 256;
+	k = 0;
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			int predictOri1, predictOri2, predictEn1, predictEn2, referOri1Val, referOri2Val;
+			int oriNeighbor1[3], enNeighbor1[3], oriNeighbor2[3], enNeighbor2[3];
+			int correlation1, correlation2;
+			if (*(locationMapColor + row * ImageWidth + column) == 0)     //若map标记0，则可用原值       
+			{
+				*(referPredict1Ori + row * ImageWidth + column + GrayHead) = *(referOri1 + row * ImageWidth + column + GrayHead);
+				*(referPredict1En + row * ImageWidth + column + GrayHead) = *(referEn1 + row * ImageWidth + column + GrayHead);
+				*(referPredict2Ori + row * ImageWidth + column + GrayHead) = *(referOri2 + row * ImageWidth + column + GrayHead);
+				*(referPredict2En + row * ImageWidth + column + GrayHead) = *(referEn2 + row * ImageWidth + column + GrayHead);
+			}
+			else if (*(locationMapColor + row * ImageWidth + column) == 1)
+			{
+				int error = *(referHoldEn + row * ImageWidth + column + GrayHead) - *(referHoldOri + row * ImageWidth + column + GrayHead);
+				unsigned char en = *(referHoldEn + row * ImageWidth + column + GrayHead);
+				unsigned char ori = *(referHoldOri + row * ImageWidth + column + GrayHead);
+				error = abs(error);
+				if (error > max)	max = error;
+				if (error < min)	min = error;
+				if (max == 255)
+					max = error;
+
+				predictOri1 = predict(referHoldOri, referPredict1Ori, row, column);
+				*(referPredict1Ori + row * ImageWidth + column + GrayHead) = predictOri1;
+
+				predictEn1 = predict(referHoldEn, referPredict1En, row, column);
+				*(referPredict1En + row * ImageWidth + column + GrayHead) = predictEn1;
+
+				predictOri2 = predict(referHoldOri, referPredict2Ori, row, column);
+				*(referPredict2Ori + row * ImageWidth + column + GrayHead) = predictOri2;
+
+				predictEn2 = predict(referHoldEn, referPredict2En, row, column);
+				*(referPredict2En + row * ImageWidth + column + GrayHead) = predictEn2;
+
+				referOri1Val = *(referOri1 + row * ImageWidth + column + GrayHead);
+				referOri2Val = *(referOri2 + row * ImageWidth + column + GrayHead);
+
+				if ((predictOri1 - referOri1Val) < 10 && (predictOri2 - referOri2Val) < 10)
+				{
+					correlation1 = predictEn1 + (predictOri1 - referOri1Val);                        //顺序要注意
+					correlation2 = predictEn2 + (predictOri2 - referOri2Val);
+					//if (predictOri1 != 0 && predictOri2 != 0)
+					//{
+						//correlation1 = predictEn1 * (referOri1Val / predictOri1);                        //顺序要注意
+						//correlation2 = predictEn2 * (referOri2Val / predictOri2);
+
+					if (correlation1 > 255 || correlation1 < 0 || correlation2 > 255 || correlation2 < 0)
+					{
+						*(mapFlow + k) = 1;
+					}
+					else
+					{
+						*(referEn1 + row * ImageWidth + column + GrayHead) = correlation1;
+						*(referEn2 + row * ImageWidth + column + GrayHead) = correlation2;
+						*(mapFlow + k) = 0;
+						kkk++;
+					}
+
+				}
+				else
+				{
+					*(mapFlow + k) = 1;
+				}
+
+
+				k++;
+			}
+		}
+
+	mapFlowLen = k;
+
+	if (channel == 0)
+	{
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(RchannelEnhanced + i) = *(referEn1 + i);
+			*(GchannelEnhanced + i) = *(referEn2 + i);
+		}
+	}
+	else if (channel == 1)
+	{
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(RchannelEnhanced + i) = *(referEn1 + i);
+			*(BchannelEnhanced + i) = *(referEn2 + i);
+		}
+	}
+	else if (channel == 2)
+	{
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(GchannelEnhanced + i) = *(referEn1 + i);
+			*(BchannelEnhanced + i) = *(referEn2 + i);
+		}
+	}
+
+	j = GrayHead;
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+		*(lpwmimage + i + 2) = *(RchannelEnhanced + j);
+		*(lpwmimage + i + 1) = *(GchannelEnhanced + j);
+		*(lpwmimage + i) = *(BchannelEnhanced + j);
+		j++;
+	}
+
+	///////////////////////////////
+
+	/*locationMap压缩*/
+	if (hlocationCompression)
+	{
+		GlobalFree(hlocationCompression);
+	}
+	hlocationCompression = GlobalAlloc(GMEM_FIXED, locationMapSize);
+	locationCompression = (unsigned char*)hlocationCompression;
+	for (int i = 0; i < locationMapSize; i++)
+		*(locationCompression + i) = 0;
+
+	if (hmapBeforeCompression)
+	{
+		GlobalFree(hmapBeforeCompression);
+	}
+	hmapBeforeCompression = GlobalAlloc(GMEM_FIXED, locationMapSize);
+	mapBeforeCompression = (unsigned char*)hmapBeforeCompression;
+	for (int i = 0; i < locationMapSize; i++)
+		*(mapBeforeCompression + i) = 0;
+
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < locationMapWidth; column++)
+		{
+			int sign = row * ImageWidth + column;
+
+			if (column % 8 == 0) location8 = 0;
+
+			if (column < ImageWidth)
+			{
+				if (*(locationMapColor + sign) == 1)
+					location8 = (location8 << 1) + 1;
+				else
+					location8 = (location8 << 1) + 0;
+			}
+			else
+				location8 = (location8 << 1) + 0;
+
+			if (column % 8 == 7)            *(mapBeforeCompression + (row * locationMapWidth + column) / 8) = location8;
+		}
+
+
+	memcpy(locationCompression, mapBeforeCompression, locationMapSize);
+
+	testbuf_len = 0;
+
+	testbuf = (unsigned char*)checkedmalloc(TESTBUF_SIZE);                        //压缩后输出
+
+	jbg85_enc_init(&s, locationMapWidth, ImageHeight, testbuf_writel, NULL);                //初始化
+	jbg85_enc_options(&s, JBG_TPBON, 0, -1);                                       //参数传递
+
+	for (int row = 0; row < ImageHeight; row++)
+		jbg85_enc_lineout(&s, locationCompression + row * locationMapWidth / 8, locationCompression + (row - 1) * locationMapWidth / 8, locationCompression + (row - 2) * locationMapWidth / 8);    //参数：一行，前一行，前前一行
+
+	buflen = testbuf_len;
+
+	memcpy(locationCompression, testbuf, buflen);
+
+	ColorLocationMap(locationCompression, buflen, channel);
+
+	addDataLen = buflen + sizeof(long) + sizeof(int);
+
+	int num_1 = 0, num_0 = 0;
+	for (int i = 0; i < ImageWidth * ImageHeight; i++)
+	{
+		if (*(overflowMap + i) == 1)	num_1++;
+		num_0 = ImageWidth * ImageHeight - num_1;
+	}
+	int num_3 = 0, num_4 = 0;
+	for (int i = 0; i < ImageWidth * ImageHeight; i++)
+	{
+		if (*(locationMapColor + i) == 1)	num_3++;
+		num_4 = ImageWidth * ImageHeight - num_3;
+	}
+	int maxUnre = -1, minUnre = 256;
+	for (int i = 0; i < ImageWidth * ImageHeight; i++)
+	{
+		int pixelEn, pixelOri;
+		if (*(locationMapColor + i) == 1)
+		{
+			pixelEn = *(referHoldEn + i + GrayHead);
+			pixelOri = *(referHoldOri + i + GrayHead);
+			if (maxUnre < pixelOri)       maxUnre = pixelOri;
+			if (minUnre > pixelOri)		minUnre = pixelOri;
+		}
+	}
+
+	int numUn[256], numTotal[256], value[256], label = 0;
+	for (int i = 0; i < 256; i++) {
+		numUn[i] = 0;
+		value[i] = -1;
+		numTotal[i] = 0;
+	}
+	for (int i = 0; i < ImageWidth * ImageHeight; i++)
+	{
+		if (*(locationMapColor + i) == 1) {
+			for (int k = 0; k < 256; k++) {
+				if (*(referHoldOri + i + GrayHead) == value[k])
+					break;
+				if (k == 255)
+				{
+					value[label] = *(referHoldOri + i + GrayHead);
+					label++;
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < ImageWidth * ImageHeight; i++)
+	{
+		if (*(locationMapColor + i) == 1)
+		{
+			for (int k = 0; k < 256; k++)
+			{
+				if (*(referHoldOri + i + GrayHead) == value[k])
+				{
+					numUn[k]++;
+					numTotal[k]++;
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (int k = 0; k < 256; k++)
+			{
+				if (*(referHoldOri + i + GrayHead) == value[k])
+				{
+					numTotal[k]++;
+					break;
+				}
+			}
+		}
+	}
+
+	int markNumTotal = 0;
+	for (int i = 0; i < 256; i++) {
+		markNumTotal = markNumTotal + numTotal[i];
+	}
+	//ColorToThreeTimesGray();
+}
+
+int CDeprejbgDoc::MED(int c, int b, int a)
+{
+	int max, min;
+	if (a > b)
+		max = a, min = b;
+	else
+		max = b, min = a;
+
+	int x;
+	x = a + b - c;
+	if (c > max)
+		return min;
+	else if (c < min)
+		return max;
+	else
+		return x;
+
+}
+
+int CDeprejbgDoc::predict(unsigned char* refer, unsigned char* bePredicted, int row, int column)
+{
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+
+	int predict, threshold, diff;
+	int Dm, Dh, Dv, Dd, Dad, De;
+	int Ir;
+	int pixel[8];
+	int num = 0;
+
+	Ir = *(refer + GrayHead + row * ImageWidth + column);
+	threshold = 10;        //threshold = {1,2,...,10} 待确定
+
+	for (int i = row - 1; i <= row + 1; i++)
+		for (int j = column - 1; j <= column + 1; j++)
+		{
+			if (i == row && j == column)
+				continue;
+
+			pixel[num] = *(refer + GrayHead + i * ImageWidth + j);
+			num++;
+		}
+
+	Dm = 0;
+	for (int i = 0; i < num; i++)
+		Dm = pixel[i] + Dm;
+	Dm = abs(Dm / 8 - Ir);
+
+	Dh = (pixel[3] + pixel[4]) / 2 - Ir;
+	Dh = abs(Dh);
+
+	Dv = (pixel[1] + pixel[6]) / 2 - Ir;
+	Dv = abs(Dv);
+
+	Dd = (pixel[0] + pixel[7]) / 2 - Ir;
+	Dd = abs(Dd);
+
+	Dad = (pixel[2] + pixel[5]) / 2 - Ir;
+	Dad = abs(Dad);
+
+	//De = min{Dh, Dv, Dd, Dad}
+	De = Dh;
+	if (De > Dv)		De = Dv;
+	if (De > Dd)		De = Dd;
+	if (De > Dad)		De = Dad;
+
+	diff = abs(Dm - De);
+	if (diff <= threshold)
+	{
+		predict = (*(bePredicted + GrayHead + (row - 1) * ImageWidth + column) + *(bePredicted + GrayHead + row * ImageWidth + column - 1)) / 2;
+	}
+	else
+	{
+		if (De == Dh)
+			predict = *(bePredicted + GrayHead + row * ImageWidth + column - 1);
+		else if (De == Dv)
+			predict = *(bePredicted + GrayHead + (row - 1) * ImageWidth + column);
+		else if (De == Dd)
+			predict = *(bePredicted + GrayHead + (row - 1) * ImageWidth + column - 1);
+		else
+			predict = *(bePredicted + GrayHead + (row - 1) * ImageWidth + column + 1);
+	}
+
+	return predict;
+}
+
+void CDeprejbgDoc::enhancedMaxRe()
+{
+	//bool haveChannel = true;
+	//ColorToThreeTimesGrayRecovery(haveChannel);
+
+	/*记录位置图新增定义*/
+	struct jbg85_dec_state d;
+	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
+	long locationMapSize;              //locationmap大小
+	unsigned char location8;           //一个字节，记录8个位置
+	unsigned char* image, * buffer;
+	size_t plane_size, buffer_len;
+	size_t cnt;
+
+	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
+	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//表明增强了哪个通道
+	int channelChosen = channelChosenExtract;
+
+	//调用RGBpre，排序，计算c、c2
+	depreRGBPre(lpwmimage);
+
+	//初始化
+	if (hMaxRecover)
+	{
+		GlobalFree(hMaxRecover);
+		hMaxRecover = NULL;
+	}
+	hMaxRecover = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MaxRecover = (unsigned char*)hMaxRecover;
+
+	if (hMedianRecover)
+	{
+		GlobalFree(hMedianRecover);
+		hMedianRecover = NULL;
+	}
+	hMedianRecover = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MedianRecover = (unsigned char*)hMedianRecover;
+
+	if (hMinRecover)
+	{
+		GlobalFree(hMinRecover);
+		hMinRecover = NULL;
+	}
+	hMinRecover = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MinRecover = (unsigned char*)hMinRecover;
+
+	if (hchannelRecovery)
+	{
+		GlobalFree(hchannelRecovery);
+		hchannelRecovery = NULL;
+	}
+	hchannelRecovery = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	channelRecovery = (unsigned char*)hchannelRecovery;
+
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	//增强后各通道赋值
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lpwmimage + j + 2);
+		*(Gchannel + GrayHead + z) = *(lpwmimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lpwmimage + j);
+		z++;
+	}
+
+	//初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//判断被增强的为何通道，并进行还原
+	if (channelChosen == 2)
+	{
+		memcpy(lppreimage, Rchannel, m_ImageSize);
+		depre();
+	}
+	else if (channelChosen == 1)
+	{
+		memcpy(lppreimage, Gchannel, m_ImageSize);
+		depre();
+	}
+	else if (channelChosen == 0)
+	{
+		memcpy(lppreimage, Bchannel, m_ImageSize);
+		depre();
+	}
+	memcpy(channelRecovery, lpwmimage, m_ImageSize);
+
+	/*map解压*/
+
+	plane_size = ImageHeight * locationMapWidth;
+	int result;
+
+	//buffer_len = ((lmwidth >> 3) + !!(lmwidth & 7)) * 3;            //缓冲区长度
+	buffer_len = plane_size;
+	buffer = (unsigned char*)checkedmalloc(buffer_len);           //缓冲区分配内存
+	image = (unsigned char*)checkedmalloc(plane_size);            //输出图像分配内存
+	jbg85_dec_init(&d, buffer, buffer_len, line_out, image);
+	result = jbg85_dec_in(&d, locationCompression, buflen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
+	//result = jbg85_dec_in(&d, colorLocationMap, ExtractMapLen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度buflen
+
+	/*解压后map移位赋值*/
+	if (hcolorMapRecover)
+	{
+		GlobalFree(hcolorMapRecover);
+		hcolorMapRecover = NULL;
+	}
+	hcolorMapRecover = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	colorMapRecover = (unsigned char*)hcolorMapRecover;
+
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			int i = column / 8;                                                 //求location map的宽
+			int sign = 7 + i * 8 - column;                                             //计算右移对应的位数，
+			unsigned char tmp = *(image + row * locationMapWidth / 8 + i);                               //读取对应的预处理location map数据，一个
+			int m = (tmp >> sign) & 1;
+			*(colorMapRecover + row * ImageWidth + column) = m;
+		}
+
+
+	/*恢复*/
+	int k = 0;
+	//int num = 0;
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		double c2En = *(lpC2image + k);
+		double cEn = *(lpCimage + k);
+		double maxRe, medianRe, minRe;
+		unsigned char maxEnChar, medianEnChar, minEnChar;
+		unsigned char maxReChar, medianReChar, minReChar;
+
+		//当增强通道的目前遍历到的像素是max
+		if (channelChosen == *(lpMreimage + k))
+		{
+			maxRe = *(channelRecovery + i);
+			maxReChar = (unsigned char)maxRe;
+			if (*(colorMapRecover + k) == 0)
+			{
+				if (maxReChar != 0)
+					minRe = maxRe * c2En + 0.5;
+				else
+					minRe = 0;
+				minReChar = (unsigned char)minRe;
+				if (maxReChar != minReChar)
+					medianRe = maxRe * (cEn - c2En * cEn + c2En) + 0.5;
+				else
+					medianRe = maxRe;
+				medianReChar = (unsigned char)medianRe;
+			}
+			else
+			{
+				minReChar = *(lpMinimage + i);
+				medianReChar = *(lpMediaimage + i);
+			}
+		}
+
+		//当增强通道的目前遍历到的像素是min
+		else if (channelChosen == *(lpMireimage + k))
+		{
+			minRe = *(channelRecovery + i);
+			minReChar = (unsigned char)minRe;
+			if (*(colorMapRecover + k) == 0)
+			{
+				maxRe = minRe / c2En + 0.5;
+				medianRe = minRe * (cEn / c2En + 1 - cEn) + 0.5;
+				maxReChar = (unsigned char)maxRe;
+				medianReChar = (unsigned char)medianRe;
+			}
+			else
+			{
+				maxReChar = *(lpMaximage + i);
+				medianReChar = *(lpMediaimage + i);
+			}
+		}
+
+		//当增强通道的目前遍历到的像素是median
+		else if (channelChosen == *(lpMereimage + k))
+		{
+			medianRe = *(channelRecovery + i);
+			medianReChar = (unsigned char)medianRe;
+			if (*(colorMapRecover + k) == 0)
+			{
+				maxRe = medianRe / (c2En + cEn - cEn * c2En) + 0.5;
+				minRe = medianRe * c2En / (c2En + cEn - cEn * c2En) + 0.5;
+				maxReChar = (unsigned char)maxRe;
+				minReChar = (unsigned char)minRe;
+			}
+			else
+			{
+				maxReChar = *(lpMaximage + i);
+				minReChar = *(lpMinimage + i);
+			}
+
+		}
+
+		*(MaxRecover + i) = maxReChar;
+		*(MedianRecover + i) = medianReChar;
+		*(MinRecover + i) = minReChar;
+
+		k++;
+	}
+
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	//int max;
+	//int t;
+	k = 0;
+	int j = GrayHead;
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+		*(lpwmimage + i + *(lpMreimage + k)) = *(MaxRecover + j);
+		*(lpwmimage + i + *(lpMereimage + k)) = *(MedianRecover + j);
+		*(lpwmimage + i + *(lpMireimage + k)) = *(MinRecover + j);
+		j++;
+		k++;
+	}
+
+}
+
+void CDeprejbgDoc::Test() {
+	struct jbg85_enc_state s;
+	int lmwidth;
+	unsigned char tmp;
+	long g;
+
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+	lp = lporigimage + GrayHead;
+
+	lmwidth = 8 * ((ImageWidth + 7) / 8);       //将图片宽度改成向上取到可以被8整除
+
+	g = ImageHeight * lmwidth / 8;         //locationmap大小
+
+	if (hhismap)
+	{
+		GlobalFree(hhismap);
+	}
+	hhismap = GlobalAlloc(GMEM_FIXED, g);
+	lphismap = (unsigned char*)hhismap;
+	for (int i = 0; i < g; i++)
+		*(lphismap + i) = 0;              //location map初始化 都赋值0
+
+
+
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < lmwidth; column++)
+		{
+			if (column % 8 == 0)	lm = 0;                         //以8位为长度，起始时先置0
+
+			if (column < ImageWidth)
+			{
+				tmp = *(lp + row * ImageWidth + column);          //lp还是处理前图像的指针，此处为读取原图像的像素值
+				if (tmp < 129)
+					lm = (lm << 1) + 1;
+				else
+					lm = (lm << 1) + 0;                        //若读到的像素为满足条件的值， 则记录变量lm左移一位后置1，若不为满足条件的值，则记录变量lm左移一位后置0
+			}
+			else
+				lm = (lm << 1) + 0;                           //当超出原图宽度时都使用0填充
+
+			if (column % 8 == 7)	*(lphismap + (row * lmwidth + column) / 8) = lm;      //到第8位时将lm赋值到map中
+		}
+
+	if (hlocmap)
+	{
+		GlobalFree(hlocmap);
+	}
+	hlocmap = GlobalAlloc(GMEM_FIXED, g);
+	locmap = (unsigned char*)hlocmap;
+	for (int i = 0; i < g; i++)
+		*(locmap + i) = 0;
+
+	memcpy(locmap, lphismap, g);
+
+	testbuf_len = 0;
+
+	testbuf = (unsigned char*)checkedmalloc(TESTBUF_SIZE);                        //压缩后输出
+
+	jbg85_enc_init(&s, lmwidth, ImageHeight, testbuf_writel, NULL);                //初始化
+	jbg85_enc_options(&s, JBG_TPBON, 0, -1);                                       //参数传递
+
+	for (int row = 0; row < ImageHeight; row++)
+		jbg85_enc_lineout(&s, locmap + row * lmwidth / 8, locmap + (row - 1) * lmwidth / 8, locmap + (row - 2) * lmwidth / 8);    //参数：一行，前一行，前前一行
+
+	buflen = testbuf_len;
+	Blow = buflen;
+	/*解压*/
+	struct jbg85_dec_state d;
+	unsigned char* image, * buffer;
+	size_t plane_size, buffer_len;
+	size_t cnt;
+
+	plane_size = ImageHeight * lmwidth;
+	int result;
+
+	//buffer_len = ((lmwidth >> 3) + !!(lmwidth & 7)) * 3;            //缓冲区长度
+	buffer_len = plane_size;
+	buffer = (unsigned char*)checkedmalloc(buffer_len);           //缓冲区分配内存
+	image = (unsigned char*)checkedmalloc(plane_size);            //输出图像分配内存
+	jbg85_dec_init(&d, buffer, buffer_len, line_out, image);
+	result = jbg85_dec_in(&d, testbuf, buflen, &cnt);             //参数分别是：压缩后数据testbuf，压缩后数据长度testbuf_len
+
+
+	//赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+
+	for (int i = 0; i < GrayHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			int i = column / 8;                                                 //求location map的宽
+			int j = 7 + i * 8 - column;                                             //计算右移对应的位数，
+			tmp = *(image + row * lmwidth / 8 + i);                               //读取对应的预处理location map数据，一个
+			int m = (tmp >> j) & 1;                                               //m为读取到的location map的位数据，为0或1
+			if (m == 1)
+			{
+				if (*(lp + row * ImageWidth + column) < 129)
+					*(lpwmimage + GrayHead + row * ImageWidth + column) = *(lp + row * ImageWidth + column);
+			}
+			else if (m == 0)
+			{
+				if (*(lp + row * ImageWidth + column) > 128)
+					*(lpwmimage + GrayHead + row * ImageWidth + column) = *(lp + row * ImageWidth + column);
+			}
+			else
+				*(lpwmimage + GrayHead + row * ImageWidth + column) = 0;
+		}
+
+}
+
+//严重失真
+void CDeprejbgDoc::Yenhanced()
+{
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hYchannel)
+	{
+		GlobalFree(hYchannel);
+		hYchannel = NULL;
+	}
+	hYchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Ychannel = (unsigned char*)hYchannel;
+
+	if (hUchannel)
+	{
+		GlobalFree(hUchannel);
+		hUchannel = NULL;
+	}
+	hUchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Uchannel = (unsigned char*)hUchannel;
+
+	if (hVchannel)
+	{
+		GlobalFree(hVchannel);
+		hVchannel = NULL;
+	}
+	hVchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Vchannel = (unsigned char*)hVchannel;
+
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Ychannel + GrayHead + z) = *(lporigimage + j) * 0.299 + *(lporigimage + j + 1) * 0.587 + *(lporigimage + j + 2) * 0.114;
+		*(Uchannel + GrayHead + z) = *(lporigimage + j) * -0.169 + *(lporigimage + j + 1) * -0.331 + *(lporigimage + j + 2) * 0.5 + 128;
+		*(Vchannel + GrayHead + z) = *(lporigimage + j) * 0.5 + *(lporigimage + j + 1) * -0.419 + *(lporigimage + j + 2) * -0.081 + 128;
+		z++;
+	}
+
+	//增强Y通道
+	lporigimage = Ychannel;
+	deori(1);
+	memcpy(Ychannel, lpwmimage, m_ImageSize);
+
+	//增强后初始化
+	if (hGchannelEnhanced)
+	{
+		GlobalFree(hGchannelEnhanced);
+		hGchannelEnhanced = NULL;
+	}
+	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
+
+	if (hRchannelEnhanced)
+	{
+		GlobalFree(hRchannelEnhanced);
+		hRchannelEnhanced = NULL;
+	}
+	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
+
+	if (hBchannelEnhanced)
+	{
+		GlobalFree(hBchannelEnhanced);
+		hBchannelEnhanced = NULL;
+	}
+	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
+
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		*(RchannelEnhanced + i) = *(Ychannel + i) + (*(Vchannel + i) - 128) * 1.13983;
+		*(GchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * -0.39465 + (*(Vchannel + i) - 128) * -0.5806;
+		*(BchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * 2.03211;
+	}
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(RchannelEnhanced + z);
+		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
+		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
+		z++;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+}
+
+void CDeprejbgDoc::Yrecovery()
+{
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hYchannel)
+	{
+		GlobalFree(hYchannel);
+		hYchannel = NULL;
+	}
+	hYchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Ychannel = (unsigned char*)hYchannel;
+
+	if (hUchannel)
+	{
+		GlobalFree(hUchannel);
+		hUchannel = NULL;
+	}
+	hUchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Uchannel = (unsigned char*)hUchannel;
+
+	if (hVchannel)
+	{
+		GlobalFree(hVchannel);
+		hVchannel = NULL;
+	}
+	hVchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Vchannel = (unsigned char*)hVchannel;
+
+	//将彩色图像RGB通道的值转为YUV格式，并分别赋值到灰度图格式
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Ychannel + GrayHead + z) = *(lpwmimage + j) * 0.299 + *(lpwmimage + j + 1) * 0.587 + *(lpwmimage + j + 2) * 0.114;
+		*(Uchannel + GrayHead + z) = *(lpwmimage + j) * -0.169 + *(lpwmimage + j + 1) * -0.331 + *(lpwmimage + j + 2) * 0.5 + 128;
+		*(Vchannel + GrayHead + z) = *(lpwmimage + j) * 0.5 + *(lpwmimage + j + 1) * -0.419 + *(lpwmimage + j + 2) * -0.081 + 128;
+		z++;
+	}
+
+	//Y通道还原
+	memcpy(lppreimage, Ychannel, m_ImageSize);
+	depre();
+	memcpy(Ychannel, lpwmimage, m_ImageSize);
+
+	//转为RGB
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		*(RchannelEnhanced + i) = *(Ychannel + i) + (*(Vchannel + i) - 128) * 1.13983;
+		*(GchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * -0.39465 + (*(Vchannel + i) - 128) * -0.5806;
+		*(BchannelEnhanced + i) = *(Ychannel + i) + (*(Uchannel + i) - 128) * 2.03211;
+	}
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(RchannelEnhanced + z);
+		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
+		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
+		z++;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+}
+
+//存在除数为零，溢出等问题，论文中没有指出如何处理
+void CDeprejbgDoc::SmallestRangeEnhanced()
+{
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	int MaxR = 0, MaxG = 0, MaxB = 0;
+	int MinR = 255, MinG = 255, MinB = 255;
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lporigimage + j);
+		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lporigimage + j + 2);
+		z++;
+		if (*(lporigimage + j) > MaxR)
+		{
+			MaxR = *(lporigimage + j);
+		}
+		else if (*(lporigimage + j) < MinR)
+		{
+			MinR = *(lporigimage + j);
+		}
+		if (*(lporigimage + j + 1) > MaxG)
+		{
+			MaxG = *(lporigimage + j + 1);
+		}
+		else if (*(lporigimage + j + 1) < MinG)
+		{
+			MinG = *(lporigimage + j + 1);
+		}
+		if (*(lporigimage + j + 2) > MaxB)
+		{
+			MaxB = *(lporigimage + j + 2);
+		}
+		else if (*(lporigimage + j + 2) < MinB)
+		{
+			MinB = *(lporigimage + j + 2);
+		}
+	}
+
+	//计算各通道的范围并找最小的
+	int Rrange, Grange, Brange, Minrange;
+	Rrange = MaxR - MinR;
+	Grange = MaxG - MinG;
+	Brange = MaxB - MinB;
+	Minrange = Rrange;
+	if (Rrange < Grange)
+	{
+		Minrange = Rrange;
+	}
+	if (Brange < Minrange)
+	{
+		Minrange = Brange;
+	}
+
+	//增强后初始化
+	if (hGchannelEnhanced)
+	{
+		GlobalFree(hGchannelEnhanced);
+		hGchannelEnhanced = NULL;
+	}
+	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
+
+	if (hRchannelEnhanced)
+	{
+		GlobalFree(hRchannelEnhanced);
+		hRchannelEnhanced = NULL;
+	}
+	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
+
+	if (hBchannelEnhanced)
+	{
+		GlobalFree(hBchannelEnhanced);
+		hBchannelEnhanced = NULL;
+	}
+	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
+
+	//选择范围最小的进行增强
+	int pairs = 50;
+	if (Minrange == Rrange)
+	{
+		lporigimage = Rchannel;
+		deori(pairs);
+		memcpy(RchannelEnhanced, lpwmimage, m_ImageSize);
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(GchannelEnhanced + i) = *(RchannelEnhanced + i) * (*(Gchannel + i)) / (*(Rchannel + i));
+			*(BchannelEnhanced + i) = *(RchannelEnhanced + i) * (*(Bchannel + i)) / (*(Rchannel + i));
+		}
+	}
+	else if (Minrange == Grange)
+	{
+		lporigimage = Gchannel;
+		deori(pairs);
+		memcpy(GchannelEnhanced, lpwmimage, m_ImageSize);
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(RchannelEnhanced + i) = *(GchannelEnhanced + i) * (*(Rchannel + i)) / (*(Gchannel + i));
+			*(BchannelEnhanced + i) = *(GchannelEnhanced + i) * (*(Bchannel + i)) / (*(Gchannel + i));
+		}
+	}
+	else
+	{
+		lporigimage = Bchannel;
+		deori(pairs);
+		memcpy(BchannelEnhanced, lpwmimage, m_ImageSize);
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			*(RchannelEnhanced + i) = *(BchannelEnhanced + i) * (*(Rchannel + i)) / (*(Bchannel + i));
+			*(GchannelEnhanced + i) = *(BchannelEnhanced + i) * (*(Gchannel + i)) / (*(Bchannel + i));
+		}
+	}
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(RchannelEnhanced + z);
+		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
+		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
+		z++;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+}
+
+void CDeprejbgDoc::GrayReference()
+{
+	//增强对数
+	int pairs = 50;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	if (hGrayscale)
+	{
+		GlobalFree(hGrayscale);
+		hGrayscale = NULL;
+	}
+	hGrayscale = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Grayscale = (unsigned char*)hGrayscale;
+
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lporigimage + j);
+		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lporigimage + j + 2);
+		*(Grayscale + GrayHead + z) = *(lporigimage + j) * 0.299 + *(lporigimage + j + 1) * 0.587 + *(lporigimage + j + 2) * 0.114;     //彩色转为灰度
+		z++;
+	}
+
+	//增强灰度图以作参考
+	lporigimage = Grayscale;
+	deori(pairs);
+	if (hGrayscaleEnhanced)
+	{
+		GlobalFree(hGrayscaleEnhanced);
+		hGrayscaleEnhanced = NULL;
+	}
+	hGrayscaleEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GrayscaleEnhanced = (unsigned char*)hGrayscaleEnhanced;
+	memcpy(GrayscaleEnhanced, lpwmimage, m_ImageSize);
+
+	//增强R通道
+	lporigimage = Rchannel;
+	deori(pairs);
+	if (hRchannelEnhanced)
+	{
+		GlobalFree(hRchannelEnhanced);
+		hRchannelEnhanced = NULL;
+	}
+	hRchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelEnhanced = (unsigned char*)hRchannelEnhanced;
+	memcpy(RchannelEnhanced, lpwmimage, m_ImageSize);
+
+	//增强B通道
+	lporigimage = Bchannel;
+	deori(pairs);
+	if (hBchannelEnhanced)
+	{
+		GlobalFree(hBchannelEnhanced);
+		hBchannelEnhanced = NULL;
+	}
+	hBchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelEnhanced = (unsigned char*)hBchannelEnhanced;
+	memcpy(BchannelEnhanced, lpwmimage, m_ImageSize);
+
+	//G通道写入
+	if (hGchannelEnhanced)
+	{
+		GlobalFree(hGchannelEnhanced);
+		hGchannelEnhanced = NULL;
+	}
+	hGchannelEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelEnhanced = (unsigned char*)hGchannelEnhanced;
+
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		*(GchannelEnhanced + i) = (*(GrayscaleEnhanced + i) - *(RchannelEnhanced + i) * 0.299 - *(BchannelEnhanced + i) * 0.114) / 0.587;
+	}
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	//写入像素值
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(RchannelEnhanced + z);
+		*(lpwmimage + o + 1) = *(GchannelEnhanced + z);
+		*(lpwmimage + o + 2) = *(BchannelEnhanced + z);
+		z++;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+}
+
+void CDeprejbgDoc::threePreProcess()
+{
+	//预处理对数
+	int pairs = 20;
+
+	//无意义
+	long pldUseless;
+	int metInThreePro = pairs - 1;
+	long payload;
+	long g = 0, el = 0;
+	long testbuf_lenR, testbuf_lenG, testbuf_lenB;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	/*记录位置图新增定义*/
+	struct jbg85_enc_state s;
+	int locationMapWidth;              //locationmap的宽，必须保证能被8整除
+	long locationMapSize;              //locationmap大小
+	unsigned char location8;           //一个字节，记录8个位置
+
+	locationMapWidth = 8 * ((ImageWidth + 7) / 8);           //向上取到被8整除，
+	locationMapSize = ImageHeight * locationMapWidth / 8;    //一个字节存8个位，因此要高乘宽后除以8
+
+	//初始化
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	if (hRchannelPreprocessed)
+	{
+		GlobalFree(hRchannelPreprocessed);
+		hRchannelPreprocessed = NULL;
+	}
+	hRchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelPreprocessed = (unsigned char*)hRchannelPreprocessed;
+
+	if (hGchannelPreprocessed)
+	{
+		GlobalFree(hGchannelPreprocessed);
+		hGchannelPreprocessed = NULL;
+	}
+	hGchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelPreprocessed = (unsigned char*)hGchannelPreprocessed;
+
+	if (hBchannelPreprocessed)
+	{
+		GlobalFree(hBchannelPreprocessed);
+		hBchannelPreprocessed = NULL;
+	}
+	hBchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelPreprocessed = (unsigned char*)hBchannelPreprocessed;
+
+	//各通道赋值
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
+		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lporigimage + j);
+		z++;
+	}
+
+	//排序
+	//deoriRGBPre();
+
+	/*三个通道分别做预处理,并记录下产生的位置信息*/
+	onlyPreProcess = true;
+
+	lporigimage = Rchannel;
+	//lporigimage = lpMaximage;
+	deori(pairs);
+	memcpy(RchannelPreprocessed, lpwmimage, m_ImageSize);
+	//lpprehist、locmap、zn、testbuf_len的记录
+	exctR = zn;
+	testbuf_lenR = testbuf_len;
+	if (hprehistRchannel)
+	{
+		GlobalFree(hprehistRchannel);
+		hprehistRchannel = NULL;
+	}
+	hprehistRchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	lpprehistRchannel = (unsigned char*)hprehistRchannel;
+	memcpy(lpprehistRchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	if (isMerge == true)
+	{
+		if (hlocmapRchannel)
+		{
+			GlobalFree(hlocmapRchannel);
+			hlocmapRchannel = NULL;
+		}
+		hlocmapRchannel = GlobalAlloc(GMEM_FIXED, lml);
+		locmapRchannel = (unsigned char*)hlocmapRchannel;
+		memcpy(locmapRchannel, locmap, lml);
+	}
+
+	lporigimage = Gchannel;
+	//lporigimage = lpMediaimage;
+	deori(pairs);
+	memcpy(GchannelPreprocessed, lpwmimage, m_ImageSize);
+	//lpprehist、locmap、zn的记录
+	exctG = zn;
+	testbuf_lenG = testbuf_len;
+	if (hprehistGchannel)
+	{
+		GlobalFree(hprehistGchannel);
+		hprehistGchannel = NULL;
+	}
+	hprehistGchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	lpprehistGchannel = (unsigned char*)hprehistGchannel;
+	memcpy(lpprehistGchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	if (isMerge == true)
+	{
+		if (hlocmapGchannel)
+		{
+			GlobalFree(hlocmapGchannel);
+			hlocmapGchannel = NULL;
+		}
+		hlocmapGchannel = GlobalAlloc(GMEM_FIXED, lml);
+		locmapGchannel = (unsigned char*)hlocmapGchannel;
+		memcpy(locmapGchannel, locmap, lml);
+	}
+
+	lporigimage = Bchannel;
+	//lporigimage = lpMinimage;
+	deori(pairs);
+	memcpy(BchannelPreprocessed, lpwmimage, m_ImageSize);
+	//lpprehist、locmap的记录
+	exctB = zn;
+	testbuf_lenB = testbuf_len;
+	if (hprehistBchannel)
+	{
+		GlobalFree(hprehistBchannel);
+		hprehistBchannel = NULL;
+	}
+	hprehistBchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	lpprehistBchannel = (unsigned char*)hprehistBchannel;
+	memcpy(lpprehistBchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	if (isMerge == true)
+	{
+		if (hlocmapBchannel)
+		{
+			GlobalFree(hlocmapBchannel);
+			hlocmapBchannel = NULL;
+		}
+		hlocmapBchannel = GlobalAlloc(GMEM_FIXED, lml);
+		locmapBchannel = (unsigned char*)hlocmapBchannel;
+		memcpy(locmapBchannel, locmap, lml);
+	}
+	onlyPreProcess = false;
+
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	//int max;
+	//int t;
+	int k = 0;
+	int j = GrayHead;
+
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+		*(lpwmimage + i + 2) = *(RchannelPreprocessed + j);
+		*(lpwmimage + i + 1) = *(GchannelPreprocessed + j);
+		*(lpwmimage + i) = *(BchannelPreprocessed + j);
+		j++;
+		k++;
+	}
+
+	/*
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+
+		*(lpwmimage + i + *(lpMreimage + k)) = *(RchannelPreprocessed + j);
+		*(lpwmimage + i + *(lpMereimage + k)) = *(GchannelPreprocessed + j);
+		*(lpwmimage + i + *(lpMireimage + k)) = *(BchannelPreprocessed + j);
+
+		j++;
+		k++;
+	}
+	*/
+
+	long exct = exctR + exctG + exctB;
+
+	threePreProcessEnhanced(metInThreePro, testbuf_lenR);
+
+}
+
+void CDeprejbgDoc::threePreProcessEnhanced(int met, long testbuf_lenInPre)
+{
+	long el = 0, g = 0;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//排序
+	if (hpreimage)
+	{
+		GlobalFree(hpreimage);
+		hpreimage = NULL;
+	}
+	hpreimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lppreimage = (unsigned char*)hpreimage;
+	memcpy(lppreimage, lporigimage, m_ColorImageSize);
+	memcpy(lporigimage, lpwmimage, m_ColorImageSize);
+	deoriRGBPre(lporigimage);
+	memcpy(lporigimage, lppreimage, m_ColorImageSize);
+
+	if (hMaximageTemporary)
+	{
+		GlobalFree(hMaximageTemporary);
+		hMaximageTemporary = NULL;
+	}
+	hMaximageTemporary = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMaximageTemporary = (unsigned char*)hMaximageTemporary;
+
+	memcpy(lpMaximageTemporary, lpMaximage, m_ImageSize);
+
+	if (hMaxEnimage)
+	{
+		GlobalFree(hMaxEnimage);
+		hMaxEnimage = NULL;
+	}
+	hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMaxEnimage = (unsigned char*)hMaxEnimage;
+	memcpy(lpMaxEnimage, lpMaximage, m_ImageSize);
+	for (int m = 0; m < met + 1; m++)
+	{
+		el = derem(lpMaximageTemporary, lpMaxEnimage, m, met, testbuf_lenInPre, exctR, locmapRchannel, lpprehistRchannel);                  //数据嵌入
+		g = g + el;
+		memcpy(lpMaxEnimage, lpMaximageTemporary, m_ImageSize);
+	}
+
+	//处理Min通道
+	if (hMinEnimage)
+	{
+		GlobalFree(hMinEnimage);
+		hMinEnimage = NULL;
+	}
+	hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMinEnimage = (unsigned char*)hMinEnimage;
+	int z = 0;
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		double c2 = *(lpC2image + z);
+		double c = *(lpCimage + z);
+		//double min = *(lpMinimage + i);
+		double max = *(lpMaxEnimage + i);
+		//double median = *(lpMediaimage + i);
+		if (max != 0)
+			*(lpMinEnimage + i) = max * c2 + 0.5;
+		else
+			*(lpMinEnimage + i) = 0;
+		z++;
+	}
+
+	//处理Media通道
+	if (hMedianEnimage)
+	{
+		GlobalFree(hMedianEnimage);
+		hMedianEnimage = NULL;
+	}
+	hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMedianEnimage = (unsigned char*)hMedianEnimage;
+	z = 0;
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		double c = *(lpCimage + z);
+		double c2 = *(lpC2image + z);
+		double max = *(lpMaxEnimage + i);
+		double min = *(lpMinEnimage + i);
+		//double median = *(lpMediaimage + i);
+		if (max != min)
+			*(lpMedianEnimage + i) = max * (c - c2 * c + c2) + 0.5;
+		else
+			*(lpMedianEnimage + i) = max;
+		z++;
+	}
+
+	if (hlocationMapColor)
+	{
+		GlobalFree(hlocationMapColor);
+		hlocationMapColor = NULL;
+	}
+	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	locationMapColor = (unsigned char*)hlocationMapColor;
+
+	int maplen = 0;
+	for (int i = 0; i < ImageWidth * ImageHeight; i++)
+	{
+		double c, c2;
+		double minRe, medianRe, maxRe;
+		unsigned char maxEn, minEn, medianEn, maxReChar, minReChar, medianReChar, minOri, medianOri, maxOri;
+
+		maxEn = *(lpMaxEnimage + GrayHead + i);
+		medianEn = *(lpMedianEnimage + GrayHead + i);
+		minEn = *(lpMinEnimage + GrayHead + i);
+
+		c = ((double)(medianEn - minEn)) / ((double)(maxEn - minEn));
+		c2 = ((double)minEn) / ((double)maxEn);
+
+		maxReChar = *(lpMaximage + GrayHead + i);
+		maxRe = (double)maxReChar;
+		if (maxReChar != 0)
+			minRe = maxRe * c2 + 0.5;
+		else
+			minRe = 0;
+		minReChar = (unsigned char)minRe;
+		if (maxReChar != minReChar)
+			medianRe = maxRe * (c - c2 * c + c2) + 0.5;
+		else
+			medianRe = maxRe;
+		medianReChar = (unsigned char)medianRe;
+
+		minOri = *(lpMinimage + GrayHead + i);
+		medianOri = *(lpMediaimage + GrayHead + i);
+		if (minOri != minReChar || medianOri != medianReChar)
+		{
+			*(locationMapColor + i) = 1;
+			maplen++;
+		}
+		else
+		{
+			*(locationMapColor + i) = 0;
+		}
+	}
+
+	if (hMinPredictOri)
+	{
+		GlobalFree(hMinPredictOri);
+		hMinPredictOri = NULL;
+	}
+	hMinPredictOri = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MinPredictOri = (unsigned char*)hMinPredictOri;
+
+	if (hMinPredictEn)
+	{
+		GlobalFree(hMinPredictEn);
+		hMinPredictEn = NULL;
+	}
+	hMinPredictEn = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MinPredictEn = (unsigned char*)hMinPredictEn;
+
+	if (hMedianPredictOri)
+	{
+		GlobalFree(hMedianPredictOri);
+		hMedianPredictOri = NULL;
+	}
+	hMedianPredictOri = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MedianPredictOri = (unsigned char*)hMedianPredictOri;
+
+	if (hMedianPredictEn)
+	{
+		GlobalFree(hMedianPredictEn);
+		hMedianPredictEn = NULL;
+	}
+	hMedianPredictEn = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	MedianPredictEn = (unsigned char*)hMedianPredictEn;
+
+	int maxMin = 0, maxMedian = 0;
+	for (int row = 0; row < ImageHeight; row++)
+		for (int column = 0; column < ImageWidth; column++)
+		{
+			int minNeighborOri[3], minNeighborEn[3], medianNeighborOri[3], medianNeighborEn[3];
+			int minMedOri, minMedEn, medianMedOri, medianMedEn;
+			if (*(locationMapColor + row * ImageWidth + column) == 0)
+			{
+				*(MinPredictOri + row * ImageWidth + column + GrayHead) = *(lpMinimage + row * ImageWidth + column + GrayHead);
+				*(MinPredictEn + row * ImageWidth + column + GrayHead) = *(lpMinEnimage + row * ImageWidth + column + GrayHead);
+				*(MedianPredictOri + row * ImageWidth + column + GrayHead) = *(lpMediaimage + row * ImageWidth + column + GrayHead);
+				*(MedianPredictEn + row * ImageWidth + column + GrayHead) = *(lpMedianEnimage + row * ImageWidth + column + GrayHead);
+			}
+			else if (*(locationMapColor + row * ImageWidth + column) == 1)
+			{
+				if (row == 0 && column == 0)
+				{
+					*(MinPredictOri + row * ImageWidth + column + GrayHead) = met + 1;
+					*(MinPredictEn + row * ImageWidth + column + GrayHead) = *(lpMinEnimage + row * ImageWidth + column + GrayHead);
+					*(MedianPredictOri + row * ImageWidth + column + GrayHead) = met + 1;
+					*(MedianPredictEn + row * ImageWidth + column + GrayHead) = *(lpMedianEnimage + row * ImageWidth + column + GrayHead);
+					continue;
+				}
+				int num = 0;
+				for (int i = row - 1; i <= row; i++)
+					for (int j = column - 1; j <= column; j++)
+					{
+						if (num < 3)
+						{
+							if (j < 0 || j >= ImageWidth || i < 0 || i >= ImageHeight)
+							{
+								num++;
+								continue;
+							}
+							minNeighborOri[num] = *(lpMinimage + i * ImageWidth + j + GrayHead);
+							minNeighborEn[num] = *(lpMinEnimage + i * ImageWidth + j + GrayHead);
+							medianNeighborOri[num] = *(lpMediaimage + i * ImageWidth + j + GrayHead);
+							medianNeighborEn[num] = *(lpMedianEnimage + i * ImageWidth + j + GrayHead);
+							num++;
+						}
+
+					}
+
+				minMedOri = MED(minNeighborOri[0], minNeighborOri[1], minNeighborOri[2]);
+				minMedEn = MED(minNeighborEn[0], minNeighborEn[1], minNeighborEn[2]);
+				medianMedOri = MED(medianNeighborOri[0], medianNeighborOri[1], medianNeighborOri[2]);
+				medianMedEn = MED(medianNeighborEn[0], medianNeighborEn[1], medianNeighborEn[2]);
+
+				*(MinPredictOri + row * ImageWidth + column + GrayHead) = minMedOri;
+				*(MinPredictEn + row * ImageWidth + column + GrayHead) = minMedEn;
+				*(MedianPredictOri + row * ImageWidth + column + GrayHead) = medianMedOri;
+				*(MedianPredictEn + row * ImageWidth + column + GrayHead) = medianMedEn;
+
+				int referOri1Val = *(lpMinimage + row * ImageWidth + column + GrayHead);
+				int referOri2Val = *(lpMediaimage + row * ImageWidth + column + GrayHead);
+
+				if ((minMedOri - referOri1Val) > 100 || (medianMedOri - referOri2Val) > 100)
+				{
+					int correlation1 = minMedEn + (minMedOri - referOri1Val);
+					int correlation2 = medianMedEn + (medianMedOri - referOri2Val);
+				}
+				if ((minMedOri - referOri1Val) > maxMin)		maxMin = minMedOri - referOri1Val;
+				if ((medianMedOri - referOri2Val) > maxMedian)		maxMedian = medianMedOri - referOri2Val;
+			}
+		}
+
+
+
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	int k = 0;
+	int j = GrayHead;
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+
+		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
+		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
+		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
+
+		j++;
+		k++;
+	}
+
+	z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
+		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lporigimage + j);
+		z++;
+	}
+
+}
+
+void CDeprejbgDoc::threePreProcessRecover()
+{
+	int pairs = 1;
+	int metInThreePro = pairs - 1;
+	unsigned char* wpR, * wpG, * wpB;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	if (hRchannelPreprocessed)
+	{
+		GlobalFree(hRchannelPreprocessed);
+		hRchannelPreprocessed = NULL;
+	}
+	hRchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelPreprocessed = (unsigned char*)hRchannelPreprocessed;
+
+	if (hGchannelPreprocessed)
+	{
+		GlobalFree(hGchannelPreprocessed);
+		hGchannelPreprocessed = NULL;
+	}
+	hGchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelPreprocessed = (unsigned char*)hGchannelPreprocessed;
+
+	if (hBchannelPreprocessed)
+	{
+		GlobalFree(hBchannelPreprocessed);
+		hBchannelPreprocessed = NULL;
+	}
+	hBchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelPreprocessed = (unsigned char*)hBchannelPreprocessed;
+
+	/*RGB通道分别赋值*/
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(RchannelPreprocessed + GrayHead + z) = *(lpwmimage + j + 2);
+		*(GchannelPreprocessed + GrayHead + z) = *(lpwmimage + j + 1);
+		*(BchannelPreprocessed + GrayHead + z) = *(lpwmimage + j);
+		z++;
+	}
+
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	wpR = RchannelPreprocessed + GrayHead;
+	preProcessRecover(lpprehistRchannel, locmapRchannel, metInThreePro, exctR, wpR);
+	memcpy(Rchannel, RchannelPreprocessed, m_ImageSize);
+
+	wpG = GchannelPreprocessed + GrayHead;
+	preProcessRecover(lpprehistGchannel, locmapGchannel, metInThreePro, exctG, wpG);
+	memcpy(Gchannel, GchannelPreprocessed, m_ImageSize);
+
+	wpB = BchannelPreprocessed + GrayHead;
+	preProcessRecover(lpprehistBchannel, locmapBchannel, metInThreePro, exctB, wpB);
+	memcpy(Bchannel, BchannelPreprocessed, m_ImageSize);
+
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);   //彩色图像大小
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o + 2) = *(Rchannel + z);
+		*(lpwmimage + o + 1) = *(Gchannel + z);
+		*(lpwmimage + o) = *(Bchannel + z);
+		z++;
+	}
+
+
+}
+
+void CDeprejbgDoc::reservedOnePairs()
+{
+	//预处理对数，即预留的pairs数
+	int pairs = 1;
+
+	//无意义
+	long pldUseless;
+	int metInThreePro = pairs - 1;
+	long payload;
+	long g = 0, el = 0;
+	long testbuf_lenR, testbuf_lenG, testbuf_lenB;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hRchannel)
+	{
+		GlobalFree(hRchannel);
+		hRchannel = NULL;
+	}
+	hRchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Rchannel = (unsigned char*)hRchannel;
+
+	if (hGchannel)
+	{
+		GlobalFree(hGchannel);
+		hGchannel = NULL;
+	}
+	hGchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Gchannel = (unsigned char*)hGchannel;
+
+	if (hBchannel)
+	{
+		GlobalFree(hBchannel);
+		hBchannel = NULL;
+	}
+	hBchannel = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Bchannel = (unsigned char*)hBchannel;
+
+	if (hRchannelPreprocessed)
+	{
+		GlobalFree(hRchannelPreprocessed);
+		hRchannelPreprocessed = NULL;
+	}
+	hRchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	RchannelPreprocessed = (unsigned char*)hRchannelPreprocessed;
+
+	if (hGchannelPreprocessed)
+	{
+		GlobalFree(hGchannelPreprocessed);
+		hGchannelPreprocessed = NULL;
+	}
+	hGchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	GchannelPreprocessed = (unsigned char*)hGchannelPreprocessed;
+
+	if (hBchannelPreprocessed)
+	{
+		GlobalFree(hBchannelPreprocessed);
+		hBchannelPreprocessed = NULL;
+	}
+	hBchannelPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	BchannelPreprocessed = (unsigned char*)hBchannelPreprocessed;
+
+	//各通道赋值
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Rchannel + GrayHead + z) = *(lporigimage + j + 2);
+		*(Gchannel + GrayHead + z) = *(lporigimage + j + 1);
+		*(Bchannel + GrayHead + z) = *(lporigimage + j);
+		z++;
+	}
+
+	/*三个通道分别做预处理,并记录下产生的位置信息*/
+	onlyPreProcess = true;
+
+	lporigimage = Rchannel;
+	//lporigimage = lpMaximage;
+	deori(pairs);
+	memcpy(RchannelPreprocessed, lpwmimage, m_ImageSize);
+	//lpprehist、locmap、zn、testbuf_len的记录
+	exctR = zn;
+	testbuf_lenR = testbuf_len;
+	if (hprehistRchannel)
+	{
+		GlobalFree(hprehistRchannel);
+		hprehistRchannel = NULL;
+	}
+	hprehistRchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	lpprehistRchannel = (unsigned char*)hprehistRchannel;
+	memcpy(lpprehistRchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	if (isMerge == true)
+	{
+		if (hlocmapRchannel)
+		{
+			GlobalFree(hlocmapRchannel);
+			hlocmapRchannel = NULL;
+		}
+		hlocmapRchannel = GlobalAlloc(GMEM_FIXED, lml);
+		locmapRchannel = (unsigned char*)hlocmapRchannel;
+		memcpy(locmapRchannel, locmap, lml);
+	}
+
+	lporigimage = Gchannel;
+	//lporigimage = lpMediaimage;
+	deori(pairs);
+	memcpy(GchannelPreprocessed, lpwmimage, m_ImageSize);
+	//lpprehist、locmap、zn的记录
+	exctG = zn;
+	testbuf_lenG = testbuf_len;
+	if (hprehistGchannel)
+	{
+		GlobalFree(hprehistGchannel);
+		hprehistGchannel = NULL;
+	}
+	hprehistGchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	lpprehistGchannel = (unsigned char*)hprehistGchannel;
+	memcpy(lpprehistGchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	if (isMerge == true)
+	{
+		if (hlocmapGchannel)
+		{
+			GlobalFree(hlocmapGchannel);
+			hlocmapGchannel = NULL;
+		}
+		hlocmapGchannel = GlobalAlloc(GMEM_FIXED, lml);
+		locmapGchannel = (unsigned char*)hlocmapGchannel;
+		memcpy(locmapGchannel, locmap, lml);
+	}
+
+	lporigimage = Bchannel;
+	//lporigimage = lpMinimage;
+	deori(pairs);
+	memcpy(BchannelPreprocessed, lpwmimage, m_ImageSize);
+	//lpprehist、locmap的记录
+	exctB = zn;
+	testbuf_lenB = testbuf_len;
+	if (hprehistBchannel)
+	{
+		GlobalFree(hprehistBchannel);
+		hprehistBchannel = NULL;
+	}
+	hprehistBchannel = GlobalAlloc(GMEM_FIXED, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	lpprehistBchannel = (unsigned char*)hprehistBchannel;
+	memcpy(lpprehistBchannel, lpprehist, 2 * (metInThreePro + 2) * sizeof(unsigned char));
+	if (isMerge == true)
+	{
+		if (hlocmapBchannel)
+		{
+			GlobalFree(hlocmapBchannel);
+			hlocmapBchannel = NULL;
+		}
+		hlocmapBchannel = GlobalAlloc(GMEM_FIXED, lml);
+		locmapBchannel = (unsigned char*)hlocmapBchannel;
+		memcpy(locmapBchannel, locmap, lml);
+	}
+	onlyPreProcess = false;
+
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	//int max;
+	//int t;
+	int k = 0;
+	int j = GrayHead;
+
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+		*(lpwmimage + i + 2) = *(RchannelPreprocessed + j);
+		*(lpwmimage + i + 1) = *(GchannelPreprocessed + j);
+		*(lpwmimage + i) = *(BchannelPreprocessed + j);
+		j++;
+		k++;
+	}
+
+	reservedOnePairsEnMax();
+}
+
+void CDeprejbgDoc::reservedOnePairsEnMax()
+{
+	long el = 0, g = 0;
+
+	int pairsEn = 30;
+	int pairsPre = pairsEn + 1;				//预处理pairs数要比增强pairs数大1
+	int metInMaxPre = pairsEn - 1;
+
+	long testbuf_lenMax;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//排序
+	deoriRGBPre(lpwmimage);
+
+
+	if (hmaxPreprocessed)
+	{
+		GlobalFree(hmaxPreprocessed);
+		hmaxPreprocessed = NULL;
+	}
+	hmaxPreprocessed = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	maxPreprocessed = (unsigned char*)hmaxPreprocessed;
+
+	/*max通道做预处理,并记录下产生的位置信息*/
+	onlyPreProcess = true;
+
+	lporigimage = lpMaximage;
+	deori(pairsPre);
+	memcpy(maxPreprocessed, lpwmimage, m_ImageSize);
+	//lpprehist、locmap、zn、testbuf_len的记录
+	exctMax = zn;
+	testbuf_lenMax = testbuf_len;
+	if (hprehistMaxChannel)
+	{
+		GlobalFree(hprehistMaxChannel);
+		hprehistMaxChannel = NULL;
+	}
+	hprehistMaxChannel = GlobalAlloc(GMEM_FIXED, 2 * (metInMaxPre + 2) * sizeof(unsigned char));
+	lpprehistMaxChannel = (unsigned char*)hprehistMaxChannel;
+	memcpy(lpprehistMaxChannel, lpprehist, 2 * (metInMaxPre + 2) * sizeof(unsigned char));
+	if (isMerge == true)
+	{
+		if (hlocmapMaxChannel)
+		{
+			GlobalFree(hlocmapMaxChannel);
+			hlocmapMaxChannel = NULL;
+		}
+		hlocmapMaxChannel = GlobalAlloc(GMEM_FIXED, lml);
+		locmapMaxChannel = (unsigned char*)hlocmapMaxChannel;
+		memcpy(locmapMaxChannel, locmap, lml);
+	}
+	onlyPreProcess = false;
+
+	//处理MAX通道
+	if (hMaxEnimage)
+	{
+		GlobalFree(hMaxEnimage);
+		hMaxEnimage = NULL;
+	}
+	hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMaxEnimage = (unsigned char*)hMaxEnimage;
+	memcpy(lpMaxEnimage, lpMaximage, m_ImageSize);
+
+	if (hMaximageTemporary)
+	{
+		GlobalFree(hMaximageTemporary);
+		hMaximageTemporary = NULL;
+	}
+	hMaximageTemporary = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMaximageTemporary = (unsigned char*)hMaximageTemporary;
+
+	memcpy(lpMaximageTemporary, lpMaximage, m_ImageSize);
+
+	for (int m = 0; m < metInMaxPre + 1; m++)
+	{
+		el = derem(lpMaximageTemporary, lpMaxEnimage, m, metInMaxPre, testbuf_lenMax, exctMax, locmapMaxChannel, lpprehistMaxChannel);                  //数据嵌入
+		g = g + el;
+		memcpy(lpMaxEnimage, lpMaximageTemporary, m_ImageSize);
+	}
+
+	//处理Min通道
+	if (hMinEnimage)
+	{
+		GlobalFree(hMinEnimage);
+		hMinEnimage = NULL;
+	}
+	hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMinEnimage = (unsigned char*)hMinEnimage;
+	int z = 0;
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		double c2 = *(lpC2image + z);
+		double c = *(lpCimage + z);
+		//double min = *(lpMinimage + i);
+		double max = *(lpMaxEnimage + i);
+		//double median = *(lpMediaimage + i);
+		if (max != 0)
+			*(lpMinEnimage + i) = max * c2 + 0.5;
+		else
+			*(lpMinEnimage + i) = 0;
+		z++;
+	}
+
+	//处理Media通道
+	if (hMedianEnimage)
+	{
+		GlobalFree(hMedianEnimage);
+		hMedianEnimage = NULL;
+	}
+	hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMedianEnimage = (unsigned char*)hMedianEnimage;
+	z = 0;
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		double c = *(lpCimage + z);
+		double c2 = *(lpC2image + z);
+		double max = *(lpMaxEnimage + i);
+		double min = *(lpMinEnimage + i);
+		//double median = *(lpMediaimage + i);
+		if (max != min)
+			*(lpMedianEnimage + i) = max * (c - c2 * c + c2) + 0.5;
+		else
+			*(lpMedianEnimage + i) = max;
+		z++;
+	}
+
+	if (hlocationMapColor)
+	{
+		GlobalFree(hlocationMapColor);
+		hlocationMapColor = NULL;
+	}
+	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	locationMapColor = (unsigned char*)hlocationMapColor;
+
+	if (hlocationMapColor)
+	{
+		GlobalFree(hlocationMapColor);
+		hlocationMapColor = NULL;
+	}
+	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	locationMapColor = (unsigned char*)hlocationMapColor;
+
+	if (hminOverflowMap)
+	{
+		GlobalFree(hminOverflowMap);
+		hminOverflowMap = NULL;
+	}
+	hminOverflowMap = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	minOverflowMap = (unsigned char*)hminOverflowMap;
+
+	if (hmedianOverflowMap)
+	{
+		GlobalFree(hmedianOverflowMap);
+		hmedianOverflowMap = NULL;
+	}
+	hmedianOverflowMap = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	medianOverflowMap = (unsigned char*)hmedianOverflowMap;
+
+	if (hoverflowValue)
+	{
+		GlobalFree(hoverflowValue);
+		hoverflowValue = NULL;
+	}
+	hoverflowValue = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight * sizeof(unsigned char));
+	overflowValue = (unsigned char*)hoverflowValue;
+
+	int overflowNum = 0;
+	for (int i = 0; i < ImageWidth * ImageHeight; i++)
+	{
+		double c, c2;
+		double minRe, medianRe, maxRe;
+		unsigned char maxEn, minEn, medianEn, maxReChar, minReChar, medianReChar, minOri, medianOri, maxOri;
+		int minSamePlus, medianSamePlus;               //同加同减后的值
+
+		maxEn = *(lpMaxEnimage + GrayHead + i);
+		medianEn = *(lpMedianEnimage + GrayHead + i);
+		minEn = *(lpMinEnimage + GrayHead + i);
+
+		c = ((double)(medianEn - minEn)) / ((double)(maxEn - minEn));
+		c2 = ((double)minEn) / ((double)maxEn);
+
+		maxReChar = *(lpMaximage + GrayHead + i);
+		maxRe = (double)maxReChar;
+		if (maxReChar != 0)
+			minRe = maxRe * c2 + 0.5;
+		else
+			minRe = 0;
+		minReChar = (unsigned char)minRe;
+		if (maxReChar != minReChar)
+			medianRe = maxRe * (c - c2 * c + c2) + 0.5;
+		else
+			medianRe = maxRe;
+		medianReChar = (unsigned char)medianRe;
+
+		maxOri = *(lpMaximage + GrayHead + i);
+		minOri = *(lpMinimage + GrayHead + i);
+		medianOri = *(lpMediaimage + GrayHead + i);
+		if (minOri != minReChar || medianOri != medianReChar)
+		{
+			minSamePlus = minOri + (maxEn - maxOri);
+			medianSamePlus = medianOri + (maxEn - maxOri);
+			if (minSamePlus >= 0)                  //若不溢出
+			{
+				*(locationMapColor + i) = 1;
+				*(minOverflowMap + i) = 0;
+				*(medianOverflowMap + i) = 0;
+				*(lpMedianEnimage + GrayHead + i) = medianSamePlus;
+				*(lpMinEnimage + GrayHead + i) = minSamePlus;
+			}
+			else
+			{
+				*(locationMapColor + i) = 0;
+				*(minOverflowMap + i) = 1;
+				*(overflowValue + overflowNum) = 0 - minSamePlus;
+				overflowNum++;
+				if (medianSamePlus <= 0)                 //若medianSamePlus也溢出
+				{
+					*(overflowValue + overflowNum) = 0 - medianSamePlus;
+					overflowNum++;
+					*(medianOverflowMap + i) = 1;
+				}
+				else
+				{
+					*(medianOverflowMap + i) = 0;
+					*(lpMedianEnimage + GrayHead + i) = medianSamePlus;
+				}
+				*(lpMedianEnimage + GrayHead + i) = medianEn;
+				*(lpMinEnimage + GrayHead + i) = minEn;
+			}
+
+		}
+		else
+		{
+			*(locationMapColor + i) = 0;
+			*(minOverflowMap + i) = 0;
+			*(medianOverflowMap + i) = 0;
+		}
+	}
+
+	/*
+	for (int i = GrayHead; i < m_ImageSize; i++)          //小于127左移，大于128右移
+	{
+		unsigned char maxEn, medianEn, minEn;
+		maxEn = *(lpMaxEnimage + i);
+		medianEn = *(lpMedianEnimage + i);
+		minEn = *(lpMinEnimage + i);
+		if (maxEn <= 127)
+		{
+			*(lpMaxEnimage + i) = maxEn - 1;
+		}
+		else
+		{
+			*(lpMaxEnimage + i) = maxEn + 1;
+		}
+
+		if (medianEn <= 127)
+		{
+			*(lpMedianEnimage + i) = medianEn - 1;
+		}
+		else
+		{
+			*(lpMedianEnimage + i) = medianEn + 1;
+		}
+
+		if (minEn <= 127)
+		{
+			*(lpMinEnimage + i) = minEn - 1;
+		}
+		else
+		{
+			*(lpMinEnimage + i) = minEn + 1;
+		}
+	}
+
+
+	for (int i = 0; i < ImageWidth*ImageHeight; i++)
+	{
+		if (*(minOverflowMap + i) == 1)
+		{
+			*(lpMinEnimage + GrayHead + i) = 0;
+			if (*(medianOverflowMap + i) == 1)
+			{
+				*(lpMedianEnimage + GrayHead + i) = 255;
+			}
+		}
+	}
+	*/
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	int k = 0;
+	int j = GrayHead;
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+
+		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
+		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
+		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
+
+		j++;
+		k++;
+	}
+}
+
+void CDeprejbgDoc::samePlus()
+{
+	int mm = 50;
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+	deoriRGBPre(lporigimage);
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//处理MAX通道
+	lporigimage = lpMaximage;
+	deori(mm);
+
+	if (hMaxEnimage)
+	{
+		GlobalFree(hMaxEnimage);
+		hMaxEnimage = NULL;
+	}
+	hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMaxEnimage = (unsigned char*)hMaxEnimage;
+	memcpy(lpMaxEnimage, lpwmimage, m_ImageSize);
+
+	if (hMinEnimage)
+	{
+		GlobalFree(hMinEnimage);
+		hMinEnimage = NULL;
+	}
+	hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMinEnimage = (unsigned char*)hMinEnimage;
+
+	if (hMedianEnimage)
+	{
+		GlobalFree(hMedianEnimage);
+		hMedianEnimage = NULL;
+	}
+	hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMedianEnimage = (unsigned char*)hMedianEnimage;
+
+	if (hlocationMapColor)
+	{
+		GlobalFree(hlocationMapColor);
+		hlocationMapColor = NULL;
+	}
+	hlocationMapColor = GlobalAlloc(GMEM_FIXED, ImageWidth * ImageHeight);
+	locationMapColor = (unsigned char*)hlocationMapColor;
+
+	int z = 0;
+	int len = 0;
+	int minMinSamePlus = 0, minMedianSamePlus = 0;
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		int minSamePlus, medianSamePlus;
+		int minSamePlus2, medianSamePlus2;
+		unsigned char maxEn, maxOri, minOri, medianOri;
+		maxEn = *(lpMaxEnimage + i);
+		maxOri = *(lpMaximage + i);
+		minOri = *(lpMinimage + i);
+		medianOri = *(lpMediaimage + i);
+		minSamePlus = minOri + (maxEn - maxOri);
+		medianSamePlus = medianOri + (maxEn - maxOri);
+		minSamePlus2 = minSamePlus;
+		medianSamePlus2 = medianSamePlus;
+		if (medianSamePlus < 0)
+		{
+			medianSamePlus = abs(medianSamePlus);
+		}
+
+		if (minSamePlus < 0)
+		{
+			minSamePlus = abs(minSamePlus);
+			*(locationMapColor + z) = 1;
+			len++;
+		}
+		else
+		{
+			*(locationMapColor + z) = 0;
+		}
+		z++;
+
+		*(lpMinEnimage + i) = minSamePlus;
+		*(lpMedianEnimage + i) = medianSamePlus;
+
+		if (minMinSamePlus > minSamePlus2)
+			minMinSamePlus = minSamePlus2;
+		if (minMedianSamePlus > medianSamePlus2)
+			minMedianSamePlus = medianSamePlus2;
+
+	}
+
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	int k = 0;
+	int j = GrayHead;
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+
+		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
+		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
+		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
+
+		j++;
+		k++;
+	}
+}
+
+long CDeprejbgDoc::colorToGrayOnlyPreprocess(unsigned char* originalImage, int pairs)
+{
+	long testbuf_lenThree;
+	int metInColorToGray = pairs - 1;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//转灰度图
+	unsigned long m_ImageSize_ori = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+	int ColorImageWidth = ImageWidth;
+	ImageWidth = 3 * ImageWidth;   //RGB分别单独视作灰度图的一个像素值，图宽变为原来3倍
+	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//初始化
+	if (hImage2D)
+	{
+		GlobalFree(hImage2D);
+		hImage2D = NULL;
+	}
+	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2D = (unsigned char*)hImage2D;
+
+	//将RGB存入灰度
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Image2D + GrayHead + z) = *(originalImage + j);
+		*(Image2D + GrayHead + z + 1) = *(originalImage + j + 1);
+		*(Image2D + GrayHead + z + 2) = *(originalImage + j + 2);
+		z = z + 3;
+	}
+
+	//初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	/*将所有像素的rgb值结合成一个直方图做预处理，并记录下产生的位置信息*/
+	onlyPreProcess = true;
+
+	lporigimage = Image2D;
+	deori(pairs);
+
+	exctThree = zn;
+	testbuf_lenThree = testbuf_len;
+	if (hprehistColorToGray)
+	{
+		GlobalFree(hprehistColorToGray);
+		hprehistColorToGray = NULL;
+	}
+	hprehistColorToGray = GlobalAlloc(GMEM_FIXED, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
+	lpprehistColorToGray = (unsigned char*)hprehistColorToGray;
+	memcpy(lpprehistColorToGray, lpprehist, 2 * (metInColorToGray + 2) * sizeof(unsigned char));
+
+	if (isMerge == true)
+	{
+		if (hlocmapColorToGray)
+		{
+			GlobalFree(hlocmapColorToGray);
+			hlocmapColorToGray = NULL;
+		}
+		hlocmapColorToGray = GlobalAlloc(GMEM_FIXED, lml);
+		locmapColorToGray = (unsigned char*)hlocmapColorToGray;
+		memcpy(locmapColorToGray, locmap, lml);
+	}
+
+	onlyPreProcess = false;
+
+	if (hImage2DEnhanced)
+	{
+		GlobalFree(hImage2DEnhanced);
+		hImage2DEnhanced = NULL;
+	}
+	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
+	memcpy(Image2DEnhanced, lpwmimage, m_ImageSize);
+
+	//初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(Image2DEnhanced + z);
+		*(lpwmimage + o + 1) = *(Image2DEnhanced + z + 1);
+		*(lpwmimage + o + 2) = *(Image2DEnhanced + z + 2);
+		z = z + 3;
+	}
+
+	//回指
+	lporigimage = lpoimage;
+
+	//回写
+	m_ImageSize = m_ImageSize_ori;
+	ImageWidth = ColorImageWidth;
+
+	return testbuf_lenThree;
+}
+
+void CDeprejbgDoc::colorToGrayOnlyPreprocessRecover(int pairs, unsigned char* lpprehistColorToGray, unsigned char* locmapColorToGray, long exctThree)
+{
+	int metInColorToGray = pairs - 1;
+
+	unsigned char* wpColorToGray;
+
+	//记录lporigimage的指向
+	lpoimage = lporigimage;
+
+	//转灰度图
+	unsigned long int m_ImageSize_ori = m_ImageSize;
+	int ColorImageWidth = ImageWidth;
+	ImageWidth = 3 * ImageWidth;
+	m_ImageSize = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + ImageWidth * ImageHeight * sizeof(unsigned char);
+
+	//将彩色图像RGB通道的值分别赋值到灰度图格式
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ColorImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//彩色图像转为灰度图像
+	//初始化
+	if (hImage2DEnhanced)
+	{
+		GlobalFree(hImage2DEnhanced);
+		hImage2DEnhanced = NULL;
+	}
+	hImage2DEnhanced = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2DEnhanced = (unsigned char*)hImage2DEnhanced;
+
+	//将RGB存入灰度
+	int z = 0;
+	for (int j = ColorHead; j < m_ColorImageSize; j = j + 3)
+	{
+		*(Image2DEnhanced + GrayHead + z) = *(lpwmimage + j);
+		*(Image2DEnhanced + GrayHead + z + 1) = *(lpwmimage + j + 1);
+		*(Image2DEnhanced + GrayHead + z + 2) = *(lpwmimage + j + 2);
+		z = z + 3;
+	}
+
+	//初始化
+	if (hImage2D)
+	{
+		GlobalFree(hImage2D);
+		hImage2D = NULL;
+	}
+	hImage2D = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	Image2D = (unsigned char*)hImage2D;
+
+	//恢复
+	wpColorToGray = Image2DEnhanced + GrayHead;
+	preProcessRecover(lpprehistColorToGray, locmapColorToGray, metInColorToGray, exctThree, wpColorToGray);
+	memcpy(Image2D, Image2DEnhanced, m_ImageSize);
+
+
+	//增强结果存出后初始化
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);   //彩色图像大小
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//将文件头写到结果指针
+	for (int m = 0; m < ColorHead; m++)
+	{
+		*(lpwmimage + m) = *(lpoimage + m);
+	}
+
+	z = GrayHead;
+	for (int o = ColorHead; o < m_ColorImageSize; o = o + 3)
+	{
+		*(lpwmimage + o) = *(Image2D + z);
+		*(lpwmimage + o + 1) = *(Image2D + z + 1);
+		*(lpwmimage + o + 2) = *(Image2D + z + 2);
+		z = z + 3;
+	}
+
+
+	//回指
+	lporigimage = lpoimage;
+
+	//回写
+	m_ImageSize = m_ImageSize_ori;
+	ImageWidth = ColorImageWidth;
+}
+
+void CDeprejbgDoc::maxEnhancedWithSamePlus()
+{
+	int s = 50;
+	for (int pairs = s; pairs < s + 1; pairs++)
+	{
+		int metInColorToGray = pairs - 1;
+		long testbuf_lenThree;
+
+		long el = 0, g = 0;
+
+		//将彩色图像RGB通道的值分别赋值到灰度图格式
+		int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+		int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+		//预处理
+		testbuf_lenThree = colorToGrayOnlyPreprocess(lporigimage, pairs);
+
+		//排序
+		deoriRGBPre(lpwmimage);
+
+		if (hMaximageTemporary)
+		{
+			GlobalFree(hMaximageTemporary);
+			hMaximageTemporary = NULL;
+		}
+		hMaximageTemporary = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+		lpMaximageTemporary = (unsigned char*)hMaximageTemporary;
+
+		memcpy(lpMaximageTemporary, lpMaximage, m_ImageSize);
+
+		if (hMaxEnimage)
+		{
+			GlobalFree(hMaxEnimage);
+			hMaxEnimage = NULL;
+		}
+		hMaxEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+		lpMaxEnimage = (unsigned char*)hMaxEnimage;
+		memcpy(lpMaxEnimage, lpMaximage, m_ImageSize);
+
+		int maxPairs;
+		for (int m = 0; m < metInColorToGray + 1; m++)
+		{
+			el = derem(lpMaximageTemporary, lpMaxEnimage, m, metInColorToGray, testbuf_lenThree, exctThree, locmapColorToGray, lpprehistColorToGray);                  //数据嵌入
+			g = g + el;
+			memcpy(lpMaxEnimage, lpMaximageTemporary, m_ImageSize);
+			/*
+			if (failed == 1)
+			{
+				maxPairs = m;
+				break;
+			}
+			*/
+		}
+		payload = g;
+
+		int maxBinNum[256];
+		histStatistics(lpMaximage, maxBinNum);
+		long maxEmbedLenPermit = 0;
+
+		for (int i = 0; i < pairs; i = i + 2)
+		{
+			maxEmbedLenPermit = maxEmbedLenPermit + maxBinNum[i] + maxBinNum[i + 1];
+		}
+		maxEmbedLenPermit = 8 * (maxEmbedLenPermit / 8);
+
+		//处理Min、Median通道
+		if (hMinEnimage)
+		{
+			GlobalFree(hMinEnimage);
+			hMinEnimage = NULL;
+		}
+		hMinEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+		lpMinEnimage = (unsigned char*)hMinEnimage;
+
+		if (hMedianEnimage)
+		{
+			GlobalFree(hMedianEnimage);
+			hMedianEnimage = NULL;
+		}
+		hMedianEnimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+		lpMedianEnimage = (unsigned char*)hMedianEnimage;
+
+		for (int i = GrayHead; i < m_ImageSize; i++)
+		{
+			unsigned char maxOri, medianOri, minOri, maxEn;
+
+			maxOri = *(lpMaximage + i);
+			maxEn = *(lpMaxEnimage + i);
+			medianOri = *(lpMediaimage + i);
+			minOri = *(lpMinimage + i);
+
+			*(lpMedianEnimage + i) = medianOri + (maxEn - maxOri);
+			*(lpMinEnimage + i) = minOri + (maxEn - maxOri);
+		}
+
+		//将RGB赋值到结果内存
+		if (hwmimage)
+		{
+			GlobalFree(hwmimage);
+			hwmimage = NULL;
+		}
+		hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+		lpwmimage = (unsigned char*)hwmimage;
+
+		//回指
+		lporigimage = lpoimage;
+
+		//将文件头写到结果指针
+		for (int i = 0; i < ColorHead; i++)
+		{
+			*(lpwmimage + i) = *(lporigimage + i);
+		}
+
+		int k = 0;
+		int j = GrayHead;
+		for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+		{
+
+			*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxEnimage + j);
+			*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianEnimage + j);
+			*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinEnimage + j);
+
+			j++;
+			k++;
+		}
+
+		psnr = psnrColorCalculate(lporigimage, lpwmimage);
+
+		if (failed == 1)
+		{
+			//pairs = maxPairs;
+			//s = maxPairs;
+			//failed = 0;
+			break;
+			//maxNotEmbed(s);
+		}
+
+		bool batchImg, hidingRate;
+		batchImg = false;
+		hidingRate = false;
+
+		//批量出图
+
+		if (strlen(FileTitle) == 11)       //ONLY FOR kodim+2位数
+		{
+			FileTitle[7] = '\0';
+		}
+		else if (strlen(FileTitle) == 10)       //ONLY FOR kodim+1位数
+		{
+			FileTitle[6] = '\0';
+		}
+
+		/*
+		if (strlen(FileTitle) == 9)         //sipi+1位数
+		{
+			FileTitle[5] = '\0';
+		}
+		else if (strlen(FileTitle) == 10)    //sipi+2位数
+		{
+			FileTitle[6] = '\0';
+		}
+		*/
+		if (batchImg == true)
+		{
+
+
+			char filename[500];
+
+			filename[0] = '\0';
+
+			sprintf(filename, "E:\\experiment\\task\\result-reversible\\sipi-new-pn\\%s_%d.bmp", FileTitle, pairs);
+
+			FILE* fb;
+
+			fb = fopen(filename, "wb");
+			if (fb == NULL)
+			{
+				AfxMessageBox("Can Not Open File To Write");
+				return;
+			}
+			fwrite(lpwmimage, sizeof(unsigned char), m_ColorImageSize, fb);
+			fclose(fb);
+		}
+
+
+		//嵌入率写入文件
+		if (hidingRate == true)
+		{
+			//净嵌入率pure hiding rate写入文件
+			FILE* payloadtxt;
+			payloadtxt = fopen("E:\\experiment\\task\\result-reversible\\sipi-new-pn\\pure hiding rate.txt", "a");
+			if (payloadtxt != NULL)
+				fprintf(payloadtxt, "\n %s_%d \t %6.4f", FileTitle, pairs, (double)payload / (double)(ImageHeight * ImageWidth));
+			fclose(payloadtxt);
+
+			//总嵌入写入文件
+			FILE* embnbtxt;
+			embnbtxt = fopen("E:\\experiment\\task\\result-reversible\\sipi-new-pn\\embnb hiding rate.txt", "a");
+			if (embnbtxt != NULL)
+				fprintf(embnbtxt, "\n %s_%d \t %6.4f", FileTitle, pairs, (double)embnb / (double)(ImageHeight * ImageWidth));
+			fclose(embnbtxt);
+
+		}
+
+
+	}
+}
+
+void CDeprejbgDoc::maxEnhancedWithSamePlusRecover()
+{
+	/*排序*/
+	/*提取*/
+	/*同加同减*/
+	/*预处理恢复*/
+	int GrayHead = 1024 + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);                 //灰度图的位图数据起点
+	int ColorHead = m_ColorImageSize - ImageWidth * ImageHeight * sizeof(unsigned char) * 3;   //彩色图的位图起点
+
+	//排序
+	depreRGBPre(lpwmimage);
+
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//max channel提取
+	memcpy(lppreimage, lpMaximage, m_ImageSize);
+	colorToGrayPreprocessRecover = true;
+	depre();
+	colorToGrayPreprocessRecover = false;
+	if (hMaxReimage)
+	{
+		GlobalFree(hMaxReimage);
+		hMaxReimage = NULL;
+	}
+	hMaxReimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMaxReimage = (unsigned char*)hMaxReimage;
+
+	memcpy(hMaxReimage, lpwmimage, m_ImageSize);
+
+	//处理Min median矩阵,同加同减
+	if (hMinReimage)
+	{
+		GlobalFree(hMinReimage);
+		hMinReimage = NULL;
+	}
+	hMinReimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMinReimage = (unsigned char*)hMinReimage;
+
+	if (hMedianReimage)
+	{
+		GlobalFree(hMedianReimage);
+		hMedianReimage = NULL;
+	}
+	hMedianReimage = GlobalAlloc(GMEM_FIXED, m_ImageSize);
+	lpMedianReimage = (unsigned char*)hMedianReimage;
+
+	for (int i = GrayHead; i < m_ImageSize; i++)
+	{
+		unsigned char maxRe, medianEn, minEn, maxEn;
+
+		maxRe = *(lpMaxReimage + i);
+		maxEn = *(lpMaximage + i);
+		medianEn = *(lpMediaimage + i);
+		minEn = *(lpMinimage + i);
+
+		*(lpMedianReimage + i) = medianEn - (maxEn - maxRe);
+		*(lpMinReimage + i) = minEn - (maxEn - maxRe);
+	}
+
+	//将RGB赋值到结果内存
+	if (hwmimage)
+	{
+		GlobalFree(hwmimage);
+		hwmimage = NULL;
+	}
+	hwmimage = GlobalAlloc(GMEM_FIXED, m_ColorImageSize);
+	lpwmimage = (unsigned char*)hwmimage;
+
+	//回指
+	lporigimage = lpoimage;
+
+	//将文件头写到结果指针
+	for (int i = 0; i < ColorHead; i++)
+	{
+		*(lpwmimage + i) = *(lporigimage + i);
+	}
+
+	int k = 0;
+	int j = GrayHead;
+	for (int i = ColorHead; i < m_ColorImageSize; i += 3)
+	{
+
+		*(lpwmimage + i + *(lpMreimage + k)) = *(lpMaxReimage + j);
+		*(lpwmimage + i + *(lpMereimage + k)) = *(lpMedianReimage + j);
+		*(lpwmimage + i + *(lpMireimage + k)) = *(lpMinReimage + j);
+
+		j++;
+		k++;
+	}
+
+	/*恢复预处理直方图*/
+	int pairs = mext + 1;
+	colorToGrayOnlyPreprocessRecover(pairs, lphist, lpextmap, exct);
 }

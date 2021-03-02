@@ -1,323 +1,306 @@
-﻿  ChildFrm.cpp
+﻿  deprejbgDoc.cpp
   _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-  deprejbg.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbg.cpp(59,2): warning C4996: 'CWinApp::Enable3dControls': CWinApp::Enable3dControls is no longer needed. You should remove this call.
-  deprejbgDoc.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(209,28): warning C4244: “=”: 从“ULONGLONG”转换到“unsigned long”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(286,29): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(275,12): warning C4101: “tpl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2662,23): warning C4244: “=”: 从“unsigned short”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2663,25): warning C4244: “=”: 从“unsigned short”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(415,14): warning C4101: “et”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(418,25): warning C4101: “s”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(415,17): warning C4101: “n”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3079,7): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,12): warning C4101: “m”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,18): warning C4101: “et”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2774,9): warning C4101: “di”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,16): warning C4101: “y”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2775,25): warning C4101: “s”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,14): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,8): warning C4101: “j”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2774,12): warning C4101: “h”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2986,31): warning C4101: “flen”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3153,30): warning C4101: “flen”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3240,30): warning C4101: “flen”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3306,30): warning C4101: “flen”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3408,24): warning C4244: “=”: 从“ULONGLONG”转换到“unsigned int”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3689,10): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3690,11): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3459,8): warning C4101: “eff”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,70): warning C4101: “suml”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,36): warning C4101: “pk”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3459,17): warning C4101: “hef”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,58): warning C4101: “y”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,55): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,79): warning C4101: “sumr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3461,46): warning C4101: “candr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3461,36): warning C4101: “candl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4213,10): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4214,11): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4000,8): warning C4101: “eff”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,66): warning C4101: “suml”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,32): warning C4101: “pk”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4000,17): warning C4101: “hef”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,54): warning C4101: “y”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,51): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,75): warning C4101: “sumr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4002,46): warning C4101: “candr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4002,36): warning C4101: “candl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4428,7): warning C4101: “pld”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4427,12): warning C4101: “di”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4426,22): warning C4101: “j”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4426,19): warning C4101: “i”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4427,9): warning C4101: “h”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4514,12): warning C4101: “m”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4524,9): warning C4101: “bpl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4525,6): warning C4101: “result”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,54): warning C4101: “pmn”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4524,14): warning C4101: “cnt”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4522,9): warning C4101: “plane_size”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4516,9): warning C4101: “di”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,39): warning C4101: “tml”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4514,16): warning C4101: “y”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,49): warning C4101: “pmx”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4523,17): warning C4101: “image”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4517,25): warning C4101: “s”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4522,21): warning C4101: “buffer_len”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4514,14): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4516,12): warning C4101: “h”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,44): warning C4101: “tmr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,21): warning C4101: “lmp”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4523,25): warning C4101: “buffer”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4521,25): warning C4101: “d”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,12): warning C4101: “m”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5048,21): warning C4101: “column”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5059,9): warning C4101: “bpl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5051,15): warning C4101: “lplen”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,26): warning C4101: “lm”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5060,6): warning C4101: “result”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,45): warning C4101: “pmn”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5059,14): warning C4101: “cnt”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5057,9): warning C4101: “plane_size”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5052,9): warning C4101: “di”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,30): warning C4101: “tml”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5062,28): warning C4101: “fl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,16): warning C4101: “y”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,40): warning C4101: “pmx”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5058,17): warning C4101: “image”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5048,28): warning C4101: “row”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5053,25): warning C4101: “s”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5057,21): warning C4101: “buffer_len”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,14): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,8): warning C4101: “j”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5052,12): warning C4101: “h”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,35): warning C4101: “tmr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,21): warning C4101: “lmp”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5058,25): warning C4101: “buffer”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5056,25): warning C4101: “d”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5545,17): warning C4308: 负整型常量转换为无符号类型
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5546,22): warning C4308: 负整型常量转换为无符号类型
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5568,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5587,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5607,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5629,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5662,9): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5684,9): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5707,9): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5732,9): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,23): warning C4101: “rn”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,32): warning C4101: “pk”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,12): warning C4101: “k”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,19): warning C4101: “hm”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,15): warning C4101: “hr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,73): warning C4101: “y”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,27): warning C4101: “hp”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,19): warning C4101: “tn”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5537,7): warning C4101: “flg”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,70): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,23): warning C4101: “hl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5770,17): warning C4308: 负整型常量转换为无符号类型
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5771,22): warning C4308: 负整型常量转换为无符号类型
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5793,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5812,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5832,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5854,10): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,23): warning C4101: “rn”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,32): warning C4101: “pk”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,12): warning C4101: “k”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,19): warning C4101: “hm”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,15): warning C4101: “hr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,73): warning C4101: “y”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,27): warning C4101: “hp”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,19): warning C4101: “tn”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5762,7): warning C4101: “flg”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,70): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,23): warning C4101: “hl”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5906,6): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5921,27): warning C4101: “lr”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5921,18): warning C4101: “x”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5921,24): warning C4101: “t”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6107,36): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6225,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6289,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6297,33): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6317,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6325,50): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6327,26): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6410,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6406,6): warning C4101: “max”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6407,6): warning C4101: “t”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6569,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6652,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6690,33): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6761,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6789,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6845,29): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6571,30): warning C4101: “maxOriShift”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6763,30): warning C4101: “maxOriShift”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6961,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7025,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7030,33): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7045,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7052,50): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7054,26): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7073,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7069,6): warning C4101: “max”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7070,6): warning C4101: “t”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7153,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7296,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7201,8): warning C4101: “tmp”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7411,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7494,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7349,16): warning C4101: “location8”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7718,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7791,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7837,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7898,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7947,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8031,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8044,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8065,33): warning C4554: “&”: 检查运算符优先级是否存在的可能的错误；使用括号阐明优先级
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8072,38): warning C4554: “&”: 检查运算符优先级是否存在的可能的错误；使用括号阐明优先级
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8079,33): warning C4554: “&”: 检查运算符优先级是否存在的可能的错误；使用括号阐明优先级
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8118,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8224,23): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8240,26): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8329,23): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8343,23): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8449,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8485,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8591,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8604,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8617,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8902,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8910,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8918,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8926,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8831,8): warning C4101: “oriNeighbor1”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8831,58): warning C4101: “enNeighbor2”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8831,25): warning C4101: “enNeighbor1”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8831,41): warning C4101: “oriNeighbor2”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9250,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9321,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9422,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9170,16): warning C4101: “location8”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9326,28): warning C4101: “medianEnChar”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9326,17): warning C4101: “maxEnChar”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9326,42): warning C4101: “minEnChar”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9590,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9592,92): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9593,125): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9594,125): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9628,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9630,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9631,82): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9632,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9642,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9687,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9689,88): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9690,119): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9691,119): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9701,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9703,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9704,82): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9705,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9715,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9765,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9844,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9855,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9866,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9880,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9938,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9943,89): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9992,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9994,120): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10005,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10096,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10215,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10040,16): warning C4101: “location8”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10037,25): warning C4101: “s”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10023,7): warning C4101: “pldUseless”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10025,7): warning C4101: “payload”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10298,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10306,35): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10321,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10329,53): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10331,29): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10503,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10515,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10348,95): warning C4101: “maxOri”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10588,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10631,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10712,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10828,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10648,7): warning C4101: “pldUseless”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10650,7): warning C4101: “payload”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10932,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10940,35): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10955,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10963,53): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10965,29): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11150,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11213,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11273,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11314,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11387,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11436,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11475,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11574,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11607,29): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11662,4): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11666,9): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11682,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11689,15): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11531,7): warning C4101: “maxPairs”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11752,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11785,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11831,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11906,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11955,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11994,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12107,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12160,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12197,29): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12269,29): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12335,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12368,29): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12398,4): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12402,9): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12418,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12425,15): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12577,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12607,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12631,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12702,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12730,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12769,28): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13144,29): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13245,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13235,16): warning C4101: “value”: 未引用的局部变量
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13273,27): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13262,16): warning C4101: “value”: 未引用的局部变量
-  deprejbgView.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgView.cpp(119,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgView.cpp(136,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgView.cpp(158,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgView.cpp(180,3): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgView.cpp(186,4): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\deprejbgView.cpp(64,15): warning C4101: “i”: 未引用的局部变量
-  jbiga.cpp
-  jbigt.cpp
-C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\ColorImage\jbigt.cpp(751,16): warning C4244: “=”: 从“unsigned long”转换到“unsigned char”，可能丢失数据
-  MainFrm.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-  SHPN.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-  StdAfx.cpp
-  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-  正在生成代码...
-  ColorImage.vcxproj -> C:\Users\fhxzh\Desktop\image color  RDH with CE\ColorImage-7method\Debug\ColorImage.exe
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(209,28): warning C4244: “=”: 从“ULONGLONG”转换到“unsigned long”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(286,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(275,12): warning C4101: “tpl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2662,23): warning C4244: “=”: 从“unsigned short”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2663,25): warning C4244: “=”: 从“unsigned short”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(415,14): warning C4101: “et”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(418,25): warning C4101: “s”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(415,17): warning C4101: “n”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3079,7): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,12): warning C4101: “m”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,18): warning C4101: “et”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2774,9): warning C4101: “di”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,16): warning C4101: “y”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2775,25): warning C4101: “s”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,14): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2772,8): warning C4101: “j”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2774,12): warning C4101: “h”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(2986,31): warning C4101: “flen”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3153,30): warning C4101: “flen”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3240,30): warning C4101: “flen”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3306,30): warning C4101: “flen”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3408,24): warning C4244: “=”: 从“ULONGLONG”转换到“unsigned int”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3689,10): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3690,11): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3459,8): warning C4101: “eff”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,70): warning C4101: “suml”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,36): warning C4101: “pk”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3459,17): warning C4101: “hef”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,58): warning C4101: “y”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,55): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3458,79): warning C4101: “sumr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3461,46): warning C4101: “candr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3461,36): warning C4101: “candl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4213,10): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4214,11): warning C4553: “==”: 未使用表达式结果；是否打算使用“=”?
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4000,8): warning C4101: “eff”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,66): warning C4101: “suml”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,32): warning C4101: “pk”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4000,17): warning C4101: “hef”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,54): warning C4101: “y”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,51): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(3998,75): warning C4101: “sumr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4002,46): warning C4101: “candr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4002,36): warning C4101: “candl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4428,7): warning C4101: “pld”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4427,12): warning C4101: “di”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4426,22): warning C4101: “j”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4426,19): warning C4101: “i”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4427,9): warning C4101: “h”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4514,12): warning C4101: “m”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4524,9): warning C4101: “bpl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4525,6): warning C4101: “result”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,54): warning C4101: “pmn”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4524,14): warning C4101: “cnt”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4522,9): warning C4101: “plane_size”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4516,9): warning C4101: “di”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,39): warning C4101: “tml”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4514,16): warning C4101: “y”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,49): warning C4101: “pmx”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4523,17): warning C4101: “image”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4517,25): warning C4101: “s”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4522,21): warning C4101: “buffer_len”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4514,14): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4516,12): warning C4101: “h”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,44): warning C4101: “tmr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4513,21): warning C4101: “lmp”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4523,25): warning C4101: “buffer”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(4521,25): warning C4101: “d”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,12): warning C4101: “m”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5048,21): warning C4101: “column”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5059,9): warning C4101: “bpl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5051,15): warning C4101: “lplen”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,26): warning C4101: “lm”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5060,6): warning C4101: “result”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,45): warning C4101: “pmn”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5059,14): warning C4101: “cnt”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5057,9): warning C4101: “plane_size”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5052,9): warning C4101: “di”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,30): warning C4101: “tml”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5062,28): warning C4101: “fl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,16): warning C4101: “y”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,40): warning C4101: “pmx”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5058,17): warning C4101: “image”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5048,28): warning C4101: “row”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5053,25): warning C4101: “s”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5057,21): warning C4101: “buffer_len”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,14): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5050,8): warning C4101: “j”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5052,12): warning C4101: “h”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,35): warning C4101: “tmr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5049,21): warning C4101: “lmp”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5058,25): warning C4101: “buffer”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5056,25): warning C4101: “d”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5545,17): warning C4308: 负整型常量转换为无符号类型
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5546,22): warning C4308: 负整型常量转换为无符号类型
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5568,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5587,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5607,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5629,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5662,9): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5684,9): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5707,9): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5732,9): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,23): warning C4101: “rn”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,32): warning C4101: “pk”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,12): warning C4101: “k”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,19): warning C4101: “hm”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,15): warning C4101: “hr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,73): warning C4101: “y”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,27): warning C4101: “hp”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,19): warning C4101: “tn”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5537,7): warning C4101: “flg”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5536,70): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5539,23): warning C4101: “hl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5770,17): warning C4308: 负整型常量转换为无符号类型
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5771,22): warning C4308: 负整型常量转换为无符号类型
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5793,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5812,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5832,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5854,10): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,23): warning C4101: “rn”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,32): warning C4101: “pk”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,12): warning C4101: “k”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,19): warning C4101: “hm”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,15): warning C4101: “hr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,73): warning C4101: “y”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,27): warning C4101: “hp”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,19): warning C4101: “tn”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5762,7): warning C4101: “flg”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5761,70): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5764,23): warning C4101: “hl”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5906,6): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5921,27): warning C4101: “lr”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5921,18): warning C4101: “x”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(5921,24): warning C4101: “t”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6107,36): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6225,21): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6289,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6297,33): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6317,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6325,50): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6327,26): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6410,21): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6406,6): warning C4101: “max”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6407,6): warning C4101: “t”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6569,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6652,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6690,33): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6761,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6789,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6845,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6571,30): warning C4101: “maxOriShift”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6763,30): warning C4101: “maxOriShift”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(6961,21): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7025,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7030,33): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7045,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7052,50): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7054,26): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7073,21): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7069,6): warning C4101: “max”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7070,6): warning C4101: “t”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7187,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7240,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7277,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7349,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7415,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7448,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7585,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7598,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7635,30): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7707,30): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7773,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7806,30): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7479,4): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7483,9): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7499,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7506,15): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7965,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(7995,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8019,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8090,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8118,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8157,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8436,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8511,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8560,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8599,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8742,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8843,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8833,16): warning C4101: “value”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8871,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8860,16): warning C4101: “value”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(8956,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9099,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9004,8): warning C4101: “tmp”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9214,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9297,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9152,16): warning C4101: “location8”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9521,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9594,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9640,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9701,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9750,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9834,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9847,20): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9868,33): warning C4554: “&”: 检查运算符优先级是否存在的可能的错误；使用括号阐明优先级
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9875,38): warning C4554: “&”: 检查运算符优先级是否存在的可能的错误；使用括号阐明优先级
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9882,38): warning C4554: “&”: 检查运算符优先级是否存在的可能的错误；使用括号阐明优先级
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(9921,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10027,23): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10043,26): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10132,23): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10146,23): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10252,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10288,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10394,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10407,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10420,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10705,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10713,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10721,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10729,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10634,8): warning C4101: “oriNeighbor1”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10634,58): warning C4101: “enNeighbor2”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10634,25): warning C4101: “enNeighbor1”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10634,41): warning C4101: “oriNeighbor2”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11053,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11124,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11225,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(10973,16): warning C4101: “location8”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11129,28): warning C4101: “medianEnChar”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11129,17): warning C4101: “maxEnChar”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11129,42): warning C4101: “minEnChar”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11393,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11395,92): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11396,125): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11397,125): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11431,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11433,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11434,82): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11435,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11445,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11490,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11492,88): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11493,119): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11494,119): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11504,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11506,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11507,82): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11508,45): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11518,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11568,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11647,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11658,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11669,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11683,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11741,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11746,93): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11795,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11797,124): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11808,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11899,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12018,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11843,16): warning C4101: “location8”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11840,25): warning C4101: “s”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11826,7): warning C4101: “pldUseless”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(11828,7): warning C4101: “payload”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12101,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12109,35): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12124,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12132,53): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12134,29): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12306,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12318,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12151,96): warning C4101: “maxOri”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12391,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12434,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12515,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12631,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12451,7): warning C4101: “pldUseless”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12453,7): warning C4101: “payload”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12735,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12743,35): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12758,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12766,53): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12768,29): warning C4244: “=”: 从“double”转换到“unsigned char”，可能丢失数据
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(12953,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13016,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13076,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13117,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13190,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13239,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13278,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13377,28): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13410,29): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13465,4): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13469,9): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13485,17): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13492,15): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13334,7): warning C4101: “maxPairs”: 未引用的局部变量
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13555,27): warning C4018: “<”: 有符号/无符号不匹配
+D:\git\color_image_RCE\ColorImage-7method\ColorImage\deprejbgDoc.cpp(13588,28): warning C4018: “<”: 有符号/无符号不匹配
+  ColorImage.vcxproj -> D:\git\color_image_RCE\ColorImage-7method\Debug\ColorImage.exe

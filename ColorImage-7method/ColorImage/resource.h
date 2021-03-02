@@ -12,7 +12,6 @@
 #define ID_DE_FIXED                     32772
 #define ID_DE_PRE                       32773
 #define ID_SAVEWATERMARKED              32774
-#define ID_TEST                         32775
 
 // Next default values for new objects
 // 

@@ -54,7 +54,6 @@ protected:
 	afx_msg void OnDeFixed();
 	afx_msg void OnDePre();
 	afx_msg void OnSavewatermarked();
-	afx_msg void OnTest();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:

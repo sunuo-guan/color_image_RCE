@@ -25,7 +25,6 @@ BEGIN_MESSAGE_MAP(CDeprejbgView, CScrollView)
 	ON_COMMAND(ID_DE_FIXED, OnDeFixed)
 	ON_COMMAND(ID_DE_PRE, OnDePre)
 	ON_COMMAND(ID_SAVEWATERMARKED, OnSavewatermarked)
-	ON_COMMAND(ID_TEST, OnTest)
 	//}}AFX_MSG_MAP
 	// Standard printing commands
 	ON_COMMAND(ID_FILE_PRINT, CView::OnFilePrint)
@@ -284,14 +283,6 @@ void CDeprejbgView::OnDePre()
 	pDoc->twoSortAndPreprocessRecover();
 	Invalidate();
 	
-}
-
-void CDeprejbgView::OnTest()
-{
-	CDeprejbgDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	pDoc->Test();
-	Invalidate();
 }
 
 void CDeprejbgView::OnSavewatermarked() 
